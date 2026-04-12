@@ -55,4 +55,4 @@ USER toothcomb
 EXPOSE 5000
 VOLUME /app/work
 
-CMD ["python3.12", "src/main.py"]
+CMD ["python", "src/main.py"]
