@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Top bar -->
+  <rect x="0" y="7" width="32" height="3" rx="1" fill="#1a1a2e"/>
+  <!-- Tines -->
+  <rect x="6"  y="9" width="3" height="16" rx="1" fill="#1a1a2e"/>
+  <rect x="12" y="9" width="3" height="16" rx="1" fill="#1a1a2e"/>
+  <rect x="18" y="9" width="3" height="16" rx="1" fill="#1a1a2e"/>
+  <rect x="24" y="9" width="3" height="16" rx="1" fill="#1a1a2e"/>
+</svg>

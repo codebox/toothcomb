@@ -1,0 +1,29 @@
+x-common: &common
+  ports:
+    - "5000:5000"
+  volumes:
+    - ./work:/app/work
+  env_file:
+    - .env
+
+services:
+  toothcomb:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    profiles: ["cpu"]
+
+  toothcomb-gpu:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    profiles: ["gpu"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

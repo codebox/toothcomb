@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toothcomb</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<!-- Masthead -->
+<header class="masthead">
+  <a href="/" class="masthead-title">Toothcomb</a>
+  <div class="masthead-subtitle">Real-Time Speech Accountability &amp; Verification</div>
+</header>
+
+<!-- Transcript Navigation -->
+<nav class="transcript-nav" id="transcriptNav">
+  <span class="transcript-nav-label">Transcripts</span>
+  <button class="btn-new-pill" data-action="open-modal">+ New</button>
+</nav>
+
+<!-- Page Body: 3-column -->
+<div class="page-body">
+  <!-- LEFT: Summary -->
+  <aside class="summary-col" id="summaryCol"></aside>
+
+  <!-- CENTER: Transcript -->
+  <article class="transcript-col" id="transcriptCol">
+    <div class="empty-state">Select or create a transcript to begin</div>
+  </article>
+
+  <!-- RIGHT: Marginalia -->
+  <aside class="margin-col" id="marginCol"></aside>
+</div>
+
+<!-- New Transcript Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>New Transcript</h2>
+    </div>
+    <div class="modal-body">
+      <!-- Common fields -->
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="job-title" placeholder="e.g. State of the Union 2025">
+      </div>
+      <div class="form-group">
+        <label>Speakers</label>
+        <input type="text" id="job-speakers" placeholder="e.g. The President">
+      </div>
+      <div class="form-group">
+        <label>Date &amp; Time</label>
+        <input type="text" id="job-datetime" placeholder="e.g. 2025-03-04">
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="job-location" placeholder="e.g. US Capitol, Washington DC">
+      </div>
+      <div class="form-group">
+        <label>Background</label>
+        <input type="text" id="job-background" placeholder="Brief description of the event">
+      </div>
+
+      <!-- Source selection -->
+      <div class="tabs">
+        <button class="tab active" data-tab="text">Paste Text</button>
+        <button class="tab" data-tab="mp3">Upload MP3</button>
+        <button class="tab" data-tab="play-mp3">Play MP3</button>
+        <button class="tab" data-tab="mic">Mic</button>
+      </div>
+
+      <!-- Text tab -->
+      <div class="tab-content active" id="tab-text">
+        <div class="form-group">
+          <label>Transcript</label>
+          <textarea id="text-transcript" placeholder="Paste the full transcript text here..."></textarea>
+        </div>
+      </div>
+
+      <!-- Upload MP3 tab -->
+      <div class="tab-content" id="tab-mp3">
+        <div class="form-group">
+          <label>Audio File</label>
+          <div class="drop-zone" id="dropZone">
+            <div>Drop an MP3 file here or click to browse</div>
+            <div class="file-name" id="fileName"></div>
+            <input type="file" id="mp3File" accept=".mp3,audio/*" style="display:none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Play MP3 tab -->
+      <div class="tab-content" id="tab-play-mp3">
+        <div class="form-group">
+          <label>Audio File</label>
+          <div class="drop-zone" id="playDropZone">
+            <div>Drop an MP3 file here or click to browse</div>
+            <div class="file-name" id="playFileName"></div>
+            <input type="file" id="playMp3File" accept=".mp3,audio/*" style="display:none">
+          </div>
+          <div style="padding:8px 0 0;color:var(--ink-muted);font-family:'Karla',sans-serif;font-size:12px">
+            The file will be played in your browser and streamed for real-time transcription.
+          </div>
+        </div>
+      </div>
+
+      <!-- Mic tab -->
+      <div class="tab-content" id="tab-mic">
+        <div style="padding:12px 0;color:var(--ink-muted);font-family:'Karla',sans-serif;font-size:13px">
+          Audio will be captured from your microphone when you start the transcript.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-transcript">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Abort Confirmation Modal -->
+<div class="modal-overlay" id="abortModalOverlay">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <h2>Stop Processing</h2>
+    </div>
+    <div class="modal-body">
+      <p style="font-family:'Karla',sans-serif;font-size:13px;color:var(--ink-light);line-height:1.5">
+        Are you sure you want to stop this job? Any in-progress analysis will complete, but no new work will be started. This cannot be undone.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-action="cancel-abort">Cancel</button>
+      <button class="btn btn-danger" data-action="confirm-abort">Stop</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <h2>Delete Transcript</h2>
+    </div>
+    <div class="modal-body">
+      <p style="font-family:'Karla',sans-serif;font-size:13px;color:var(--ink-light);line-height:1.5">
+        Are you sure you want to delete <strong id="deleteJobTitle"></strong>? This will permanently remove the transcript and all associated analysis data.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-action="cancel-delete">Cancel</button>
+      <button class="btn btn-danger" data-action="confirm-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Templates ── -->
+
+<template id="tmpl-nav-pill">
+  <button class="transcript-pill" data-action="select-job">
+    <span class="pill-dot"></span>
+    <span class="pill-title"></span>
+    <span class="pill-live" hidden>Live</span>
+  </button>
+</template>
+
+<template id="tmpl-status-bar">
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <div class="status-bar-dot"></div>
+      <span class="status-bar-label"></span>
+    </div>
+    <div class="status-bar-audio" hidden>
+      <span class="rec-time rec-label"></span>
+      <span class="rec-time" id="recTime"></span>
+      <div class="audio-visualizer" id="audioViz"></div>
+    </div>
+    <div class="status-bar-actions">
+      <button class="status-bar-btn" hidden data-action="start-job">Start</button>
+      <button class="status-bar-btn" hidden data-action="pause-job">Pause</button>
+      <button class="status-bar-btn btn-stop" hidden data-action="abort-job">Stop</button>
+    </div>
+  </div>
+</template>
+
+<template id="tmpl-meta-row">
+  <div class="meta-row">
+    <span class="meta-key"></span>
+    <span class="meta-value"></span>
+  </div>
+</template>
+
+<template id="tmpl-stat-cell">
+  <div class="stat-cell">
+    <div class="stat-number"></div>
+    <div class="stat-label"></div>
+  </div>
+</template>
+
+<template id="tmpl-verdict-row">
+  <div class="verdict-row">
+    <span class="verdict-name" style="width:72px"></span>
+    <div class="verdict-bar-track"><div class="verdict-bar-fill"></div></div>
+    <span class="verdict-count"></span>
+  </div>
+</template>
+
+<template id="tmpl-usage-item">
+  <div class="usage-item">
+    <span class="usage-key"></span>
+    <span class="usage-value"></span>
+  </div>
+</template>
+
+<template id="tmpl-margin-note">
+  <div class="margin-note">
+    <div class="margin-header">
+      <span class="margin-led"></span>
+      <span class="margin-type"></span>
+      <span class="margin-ref"></span>
+    </div>
+    <div class="margin-notes"></div>
+    <div class="margin-verdict" hidden>
+      <span class="margin-verdict-label"></span>
+      <span class="margin-verdict-text"></span>
+    </div>
+    <div class="margin-pending" hidden>Verifying&hellip;</div>
+  </div>
+</template>
+
+
+
+
+<script type="module" src="/js/bundle.js"></script>
+</body>
+</html>

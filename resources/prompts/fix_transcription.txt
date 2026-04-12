@@ -1,0 +1,3 @@
+<fix_transcription>
+Both the previous statements and the new text were produced by automatic speech-to-text transcription and may contain errors — misheard words, repetition, incorrect homophones, missing or extra words, or garbled phrases. When interpreting the previous statements for context, be aware that they may contain such errors. For the new text, correct any likely transcription errors so the text reads naturally and accurately. Do not alter the speaker's intended meaning, tone, or style.
+</fix_transcription>

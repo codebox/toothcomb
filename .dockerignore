@@ -1,0 +1,12 @@
+.git
+.venv
+.idea
+.claude
+.DS_Store
+__pycache__
+node_modules
+work/
+tests/
+web/js/bundle.js
+web/js/bundle.js.map
+*.pyc

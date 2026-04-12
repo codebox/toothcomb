@@ -1,0 +1,7 @@
+anthropic>=0.40,<1.0
+faster-whisper>=1.0
+flask>=3.0,<4.0
+flask-socketio>=5.3,<6.0
+simple-websocket>=1.0
+pydub>=0.25,<1.0
+PyYAML>=6.0

@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "esbuild web/ts/main.ts --bundle --outfile=web/js/bundle.js --format=esm --target=es2020 --sourcemap",
+    "watch": "esbuild web/ts/main.ts --bundle --outfile=web/js/bundle.js --format=esm --target=es2020 --sourcemap --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

@@ -1,0 +1,100 @@
+# ──────────────────────────────────────────────────────────────────────
+# Toothcomb Configuration
+# ──────────────────────────────────────────────────────────────────────
+#
+# Environment Variable Overrides
+# ──────────────────────────────
+# Any value in this file can be overridden by setting an environment
+# variable. Convert the dotted key path to uppercase and replace dots
+# with double underscores.
+#
+# Examples:
+#   llm.anthropic.api_key  →  LLM__ANTHROPIC__API_KEY=sk-ant-...
+#   whisper.backend        →  WHISPER__BACKEND=faster-whisper
+#   webserver.port         →  WEBSERVER__PORT=8080
+#
+# This is the recommended way to provide secrets (API keys) rather
+# than putting them in this file.
+# ──────────────────────────────────────────────────────────────────────
+
+# Run in demo mode with pre-loaded sample data (true/false)
+demo: false
+
+# Minimum log level: DEBUG, INFO, WARNING, ERROR
+log_level: INFO
+
+paths:
+  # Directory for uploaded audio files
+  uploads: work/uploads
+  # Directory for completed job output
+  completed: work/completed
+  # SQLite database file path
+  db: work/db/toothcomb.db
+
+audio:
+  # Target chunk length in seconds for splitting audio before transcription
+  chunk_seconds: 5
+  # Maximum chunk length — chunks won't exceed this even if no silence is found
+  chunk_max_seconds: 10
+  # Overlap between consecutive chunks to avoid cutting words at boundaries
+  chunk_overlap_seconds: 2
+  # Volume threshold in dB for detecting silence (more negative = quieter sounds count as silence)
+  silence_thresh_db: -40
+  # Minimum silence duration in milliseconds to qualify as a split point
+  min_silence_ms: 300
+  # How far from the target chunk boundary to search for a silence split point (ms)
+  silence_search_window_ms: 5000
+
+whisper:
+  # Speech-to-text backend: "mlx" (macOS Apple Silicon) or "faster-whisper" (Linux/Docker)
+  backend: mlx
+  # Whisper model size: tiny, base, small, medium, large-v2, large-v3
+  # Larger models are more accurate but slower and use more memory
+  model: large-v3
+  # Device for inference: "auto", "cpu", or "cuda" (faster-whisper only)
+  device: auto
+
+webserver:
+  # Port the web server listens on
+  port: 5000
+
+llm:
+  # Number of previous utterances included as context when analysing the current one
+  previous_utterance_count: 5
+  anthropic:
+    # API key — set via LLM__ANTHROPIC__API_KEY environment variable rather than here
+    # api_key:
+
+    # Model used for analysing utterances (extracting claims, annotations, tactics)
+    # Options: claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5
+    analysis_model: claude-opus-4-6
+    # Model used for fact-checking individual claims via web search
+    fact_check_model: claude-sonnet-4-6
+    # Model used for the final whole-transcript review
+    review_model: claude-opus-4-6
+
+    # Anthropic server-side web search tool version
+    web_search_tool: web_search_20260209
+    # Maximum number of web searches the model can perform per fact check
+    web_search_max_uses: 2
+
+    # Number of automatic retries on transient API errors (429, 529, etc.)
+    max_retries: 3
+    # Timeout in seconds for a single API request
+    request_timeout: 120
+
+    # Maximum output tokens for each LLM call type — increase if responses are truncated
+    analysis_max_tokens: 8192
+    fact_check_max_tokens: 2048
+    review_max_tokens: 4096
+
+pipeline:
+  # Minimum word count before buffered utterances are flushed for analysis
+  analysis_buffer_words: 30
+  # Extra parse retries for fact check responses (on top of LLM-level retries)
+  fact_check_parse_retries: 2
+  # Number of concurrent worker threads for each pipeline stage
+  transcription_workers: 1
+  analysis_workers: 1
+  review_workers: 1
+  fact_check_workers: 1

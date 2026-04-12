@@ -1,0 +1,13 @@
+.idea
+.claude
+.venv
+.DS_Store
+.env
+work/
+**/__pycache__/
+node_modules/
+web/js/bundle.js
+web/js/bundle.js.map
+notes.txt
+.pytest_cache/
+.coverage
