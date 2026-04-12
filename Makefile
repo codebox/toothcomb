@@ -1,3 +1,7 @@
+# Load .env (API keys etc.) into the environment for local runs
+-include .env
+export
+
 .PHONY: run test build clean
 
 .venv:

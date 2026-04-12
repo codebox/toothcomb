@@ -68,6 +68,12 @@ Toothcomb does not run natively on Windows. Two options:
 
 2. **Docker Desktop** — Install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) with the WSL 2 backend, then use the Docker commands from the Linux section. GPU passthrough requires Docker Desktop with WSL 2 and NVIDIA GPU support.
 
+## First run
+
+On the first run, the application will download a Whisper speech-to-text model (several gigabytes depending on the configured model size). The download progress is shown in the terminal. The app will not be ready to process audio until the download completes. Subsequent runs use the cached model and start up much faster.
+
+Models are cached in `~/.cache/huggingface/hub/` and shared across projects, so you only download each model size once per machine.
+
 ## Tests
 
 ```bash

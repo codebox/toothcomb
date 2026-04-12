@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         store = buildJobStore(),
         audio = buildAudioPipeline(service, {
             onRender: () => render(),
+            onMicrophoneRequested: () => transcript.showMicrophonePrompt(),
             onRecordingTick: seconds => transcript.updateRecordingTime(seconds),
             onVisualizerFrame: (dataArray, barCount) => transcript.updateVisualizer(dataArray, barCount),
         });

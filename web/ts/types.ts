@@ -237,6 +237,7 @@ export interface AudioInfo {
 
 export interface AudioCallbacks {
     onRender(): void;
+    onMicrophoneRequested(): void;
     onRecordingTick(seconds: number): void;
     onVisualizerFrame(dataArray: Uint8Array, barCount: number): void;
 }
@@ -286,6 +287,7 @@ export interface TranscriptView {
     render(data: TranscriptData | null): void;
     updateRecordingTime(seconds: number): void;
     updateVisualizer(dataArray: Uint8Array, barCount: number): void;
+    showMicrophonePrompt(): void;
 }
 
 export interface MarginaliaData {

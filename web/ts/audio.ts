@@ -115,14 +115,31 @@ export function buildAudioPipeline(service: Service, callbacks: AudioCallbacks):
     }
 
     async function handleStartStreaming(jobId: string) {
+        let stream: MediaStream | undefined;
+        let context: AudioContext | undefined;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+            callbacks.onMicrophoneRequested();
+            stream = await navigator.mediaDevices.getUserMedia({audio: true});
+            context = new AudioContext();
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+            const source = context.createMediaStreamSource(stream);
             await service.startJob(jobId);
-            const context = new AudioContext(),
-                source = context.createMediaStreamSource(stream);
             startAudioPipeline(jobId, context, source, {stream: stream, label: 'microphone'});
         } catch (e: any) {
-            alert('Could not start streaming: ' + e.message);
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+            }
+            if (context) {
+                context.close();
+            }
+            callbacks.onRender();
+            if (e.name === 'NotAllowedError') {
+                alert('Microphone access was denied. To allow it, click the site settings icon in your browser\'s address bar and grant microphone permission, then try again.');
+            } else {
+                alert('Could not start streaming: ' + e.message);
+            }
         }
     }
 
@@ -134,8 +151,11 @@ export function buildAudioPipeline(service: Service, callbacks: AudioCallbacks):
             await service.startJob(jobId);
             const elAudio = new Audio();
             elAudio.src = URL.createObjectURL(streamMp3File);
-            const context = new AudioContext(),
-                source = context.createMediaElementSource(elAudio);
+            const context = new AudioContext();
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+            const source = context.createMediaElementSource(elAudio);
             elAudio.addEventListener('ended', () => stopStreaming());
             startAudioPipeline(jobId, context, source, {audioEl: elAudio, label: 'mp3'});
             elAudio.play();

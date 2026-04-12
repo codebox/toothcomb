@@ -246,5 +246,16 @@ export function buildTranscriptView(): TranscriptView {
         userScrolledUp = (this.scrollTop + this.clientHeight) < (this.scrollHeight - 50);
     });
 
-    return {on, render, updateRecordingTime, updateVisualizer};
+    function showMicrophonePrompt(): void {
+        const elLabel = document.querySelector('.status-bar-label');
+        const elStartBtn = document.querySelector('[data-action="start-job"]') as HTMLElement | null;
+        if (elLabel) {
+            elLabel.textContent = 'Waiting for microphone...';
+        }
+        if (elStartBtn) {
+            elStartBtn.hidden = true;
+        }
+    }
+
+    return {on, render, updateRecordingTime, updateVisualizer, showMicrophonePrompt};
 }
