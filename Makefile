@@ -2,9 +2,18 @@
 -include .env
 export
 
-.PHONY: run test build clean
+REQUIRED_PYTHON_MINOR := 10
+PYTHON_VERSION := $(shell python3 -c 'import sys; print(sys.version_info.minor)')
 
-.venv:
+.PHONY: run test build clean check-python
+
+check-python:
+	@if [ "$(PYTHON_VERSION)" -lt "$(REQUIRED_PYTHON_MINOR)" ]; then \
+		echo "Error: Python 3.$(REQUIRED_PYTHON_MINOR)+ is required (found 3.$(PYTHON_VERSION))"; \
+		exit 1; \
+	fi
+
+.venv: check-python
 	python3 -m venv .venv
 	.venv/bin/pip install --no-build-isolation -r requirements.txt
 

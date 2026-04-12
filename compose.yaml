@@ -3,6 +3,7 @@ x-common: &common
     - "5000:5000"
   volumes:
     - ./work:/app/work
+    - ~/.cache/huggingface:/home/toothcomb/.cache/huggingface
   env_file:
     - .env
 
