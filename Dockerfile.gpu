@@ -39,6 +39,7 @@ ENV PYTHONPATH=src
 ENV WHISPER__BACKEND=faster-whisper
 
 COPY web/index.html web/index.html
+COPY web/favicon.svg web/favicon.svg
 COPY web/css/ web/css/
 COPY web/fonts/ web/fonts/
 COPY --from=frontend /build/web/js/bundle.js web/js/bundle.js
