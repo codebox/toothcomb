@@ -45,6 +45,11 @@ audio:
   # How far from the target chunk boundary to search for a silence split point (ms)
   silence_search_window_ms: 5000
 
+text:
+  # Maximum words per chunk before force-splitting — protects against unpunctuated
+  # text producing one giant chunk. Target chunk size is pipeline.analysis_buffer_words.
+  chunk_max_words: 90
+
 whisper:
   # Speech-to-text backend: "mlx" (macOS Apple Silicon) or "faster-whisper" (Linux/Docker)
   backend: mlx

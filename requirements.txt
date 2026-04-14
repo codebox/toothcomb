@@ -7,4 +7,5 @@ simple-websocket>=1.0
 pydub>=0.25,<1.0
 audioop-lts>=0.2; python_version >= '3.13'
 PyYAML>=6.0
+pysbd>=0.3
 pytest>=9.0,<10.0
