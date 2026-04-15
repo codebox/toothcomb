@@ -86,7 +86,12 @@ class ClaudeClient:
                         seen_urls.add(url)
                         citations.append(Citation(url=url, title=title or ""))
         if result is None:
-            raise ValueError("No text block in response")
+            block_types = [getattr(b, "type", "?") for b in response.content]
+            stop_reason = getattr(response, "stop_reason", "?")
+            raise ValueError(
+                f"No text block in response (stop_reason={stop_reason}, "
+                f"block_types={block_types})"
+            )
 
         api_usage = response.usage
         cache_read = getattr(api_usage, "cache_read_input_tokens", 0) or 0

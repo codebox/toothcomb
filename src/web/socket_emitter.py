@@ -56,6 +56,12 @@ class SocketEmitter:
             "citations": citations or [],
         }, **kwargs)
 
+    def fact_check_reset(self, job_id: JobId, annotation_id: AnnotationId, **kwargs) -> None:
+        self._sio.emit("fact_check_reset", {
+            "job_id": job_id,
+            "annotation_id": annotation_id,
+        }, **kwargs)
+
     def utterances_merged(self, job_id: JobId, merged_ids: list[UtteranceId], target_id: UtteranceId, **kwargs) -> None:
         self._sio.emit("utterances_merged", {
             "job_id": job_id,

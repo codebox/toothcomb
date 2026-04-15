@@ -157,6 +157,12 @@ class Database(ABC):
         """Mark a fact-check as failed."""
 
     @abstractmethod
+    def reset_annotation_fact_check(self, annotation_id: AnnotationId) -> bool:
+        """Reset an annotation's fact-check to pending, clearing any previous
+        verdict, note and citations. Returns True if the annotation exists and
+        was reset."""
+
+    @abstractmethod
     def get_annotation(self, annotation_id: AnnotationId) -> Optional[Annotation]:
         """Return a single annotation by ID."""
 

@@ -68,13 +68,15 @@ export function buildSummaryView(): SummaryView {
         elCol.appendChild(makeEl('div', 'section-label', 'Fact-Check Verdicts'));
         const elVerdicts = makeEl('div', ''),
             totalChecks = Math.max(1,
-                verdicts.established + verdicts.misleading + verdicts.unsupported + verdicts.false + verdicts.pending),
+                verdicts.established + verdicts.misleading + verdicts.unsupported
+                + verdicts.false + verdicts.pending + verdicts.failed),
             verdictRows: [string, number, string][] = [
                 ['Established', verdicts.established, 'established'],
                 ['Misleading', verdicts.misleading, 'misleading'],
                 ['Unsupported', verdicts.unsupported, 'unsupported'],
                 ['False', verdicts.false, 'false'],
                 ['Pending', verdicts.pending, 'pending'],
+                ['Failed', verdicts.failed, 'failed'],
             ];
         elVerdicts.style.marginBottom = '20px';
         verdictRows.forEach(([label, count, cls]) => {

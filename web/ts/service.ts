@@ -18,6 +18,7 @@ export function buildService(): Service {
     socket.on('analysis', (data: any) => emit('analysis', data));
     socket.on('utterances_merged', (data: any) => emit('utterancesMerged', data));
     socket.on('fact_check', (data: any) => emit('factCheck', data));
+    socket.on('fact_check_reset', (data: any) => emit('factCheckReset', data));
     socket.on('job_stats', (data: any) => emit('jobStats', data));
     socket.on('transcript_review', (data: any) => emit('transcriptReview', data));
     socket.on('replay_complete', (data: any) => emit('replayComplete', data));
@@ -73,6 +74,16 @@ export function buildService(): Service {
         }
     }
 
+    async function retryFactCheck(jobId: string, annotationId: string): Promise<void> {
+        const resp = await fetch(
+            `/jobs/${jobId}/annotations/${annotationId}/retry-fact-check`,
+            {method: 'POST'},
+        );
+        if (!resp.ok) {
+            throw new Error(await resp.text());
+        }
+    }
+
     // ── Socket commands ──
     function joinJob(jobId: string): void {
         socket.emit('join_job', {job_id: jobId});
@@ -97,6 +108,7 @@ export function buildService(): Service {
         startJob,
         abortJob,
         deleteJob,
+        retryFactCheck,
         joinJob,
         leaveJob,
         sendAudioChunk,

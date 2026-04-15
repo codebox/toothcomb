@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     service.on('analysis', data => store.handleAnalysis(data));
     service.on('utterancesMerged', data => store.handleUtterancesMerged(data));
     service.on('factCheck', data => store.handleFactCheck(data));
+    service.on('factCheckReset', data => store.handleFactCheckReset(data));
     service.on('jobStats', data => store.handleJobStats(data));
     service.on('transcriptReview', data => store.handleReview(data));
     service.on('replayComplete', data => store.handleReplayComplete(data));
@@ -85,6 +86,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Nav events ──
     nav.on('selectJob', selectJob);
     nav.on('openModal', () => modal.open());
+
+    // ── Marginalia events ──
+    marginalia.on('retryFactCheck', async (annotationId: string) => {
+        if (demo) {
+            alert(DEMO_MSG);
+            return;
+        }
+        const jobId = store.getActiveJobId();
+        if (!jobId) {
+            return;
+        }
+        try {
+            await service.retryFactCheck(jobId, annotationId);
+        } catch (err) {
+            alert('Failed to retry fact check: ' + (err as Error).message);
+        }
+    });
 
     // ── Demo mode message ──
     const DEMO_MSG = 'This is a demo — this action is not available.';
@@ -214,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
             factChecks: activeJob.factChecks,
             review: activeJob.review,
             status: activeJob.status || 'init',
+            demo,
         });
     }
 

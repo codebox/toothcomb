@@ -4,7 +4,7 @@
 
 export type AnnotationType = 'CLAIM' | 'PREDICTION' | 'COMMITMENT' | 'FALLACY' | 'RHETORIC' | 'TACTIC';
 
-export type Verdict = 'Established' | 'Misleading' | 'Unsupported' | 'False' | 'Pending';
+export type Verdict = 'Established' | 'Misleading' | 'Unsupported' | 'False' | 'Pending' | 'FAILED';
 
 export type JobStatus = 'init' | 'ingesting' | 'analysing' | 'reviewing' | 'complete' | 'aborted';
 
@@ -128,6 +128,7 @@ export interface VerdictCounts {
     unsupported: number;
     false: number;
     pending: number;
+    failed: number;
 }
 
 export interface StatCounts {
@@ -186,6 +187,11 @@ export interface FactCheckEvent {
     verdict: Verdict;
     note: string;
     citations?: FactCheckCitation[];
+}
+
+export interface FactCheckResetEvent {
+    job_id: string;
+    annotation_id: string;
 }
 
 export interface JobStatsEvent {
@@ -296,9 +302,11 @@ export interface MarginaliaData {
     factChecks: Record<string, FactCheck>;
     review: ReviewData | null;
     status: string;
+    demo: boolean;
 }
 
 export interface MarginaliaView {
+    on(event: string, fn: (data?: any) => void): void;
     render(data: MarginaliaData | null): void;
 }
 
@@ -339,6 +347,7 @@ export interface Service {
     startJob(jobId: string): Promise<void>;
     abortJob(jobId: string): Promise<void>;
     deleteJob(jobId: string): Promise<void>;
+    retryFactCheck(jobId: string, annotationId: string): Promise<void>;
     joinJob(jobId: string): void;
     leaveJob(jobId: string): void;
     sendAudioChunk(jobId: string, audioBuffer: ArrayBuffer): void;
@@ -365,6 +374,7 @@ export interface JobStore {
     handleAnalysis(data: AnalysisEvent): void;
     handleUtterancesMerged(data: UtterancesMergedEvent): void;
     handleFactCheck(data: FactCheckEvent): void;
+    handleFactCheckReset(data: FactCheckResetEvent): void;
     handleJobStats(data: JobStatsEvent): void;
     handleReview(data: ReviewData): void;
     handleReplayComplete(data: ReplayCompleteEvent): void;

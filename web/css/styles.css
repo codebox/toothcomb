@@ -407,10 +407,12 @@ body {
 .verdict-bar-fill.unsupported { background: var(--orange); }
 .verdict-bar-fill.false { background: var(--red); }
 .verdict-bar-fill.pending { background: var(--blue); }
+.verdict-bar-fill.failed { background: var(--ink); }
 .margin-verdict-label.established { color: var(--green); }
 .margin-verdict-label.misleading { color: var(--amber); }
 .margin-verdict-label.unsupported { color: var(--orange); }
 .margin-verdict-label.false { color: var(--red); }
+.margin-verdict-label.failed { color: var(--ink); }
 
 /* Usage stats */
 .usage-item {
@@ -657,6 +659,22 @@ body {
   font-size: 11px;
   color: var(--ink-muted);
   font-style: italic;
+}
+.margin-retry {
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-family: 'Karla', sans-serif;
+  font-size: 11px;
+  background: transparent;
+  color: var(--ink-light);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.margin-retry:hover {
+  background: var(--rule-light);
+  border-color: var(--ink-muted);
 }
 .margin-citations {
   margin-top: 6px;

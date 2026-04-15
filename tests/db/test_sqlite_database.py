@@ -522,7 +522,8 @@ def test_claim_fact_check_skips_no_query(db):
 
 
 def test_claim_fact_check_only_active_jobs(db):
-    """Fact checks should only be claimed for jobs in running/analysing/reviewing status."""
+    """Fact checks should be claimable for jobs in ingesting/analysing/reviewing/complete
+    status (complete is included to allow manual retry of fact checks on finished jobs)."""
     _setup_analysis_chain(db)
     # Job is in 'init' status — fact check should not be claimable
     assert db.claim_fact_check() is None
@@ -550,9 +551,12 @@ def test_claim_fact_check_only_active_jobs(db):
     conn.execute("UPDATE annotations SET fact_check_status = 'pending' WHERE id = 'ann-1'")
     conn.commit()
 
-    # Move to complete — should NOT be claimable
+    # Move to complete — should be claimable (enables manual retry of failed fact checks)
     db.update_job_status(JobId("job-1"), JobStatus.COMPLETE)
-    assert db.claim_fact_check() is None
+    claimed = db.claim_fact_check()
+    assert claimed is not None
+    conn.execute("UPDATE annotations SET fact_check_status = 'pending' WHERE id = 'ann-1'")
+    conn.commit()
 
     # Move to aborted — should NOT be claimable
     db.update_job_status(JobId("job-1"), JobStatus.ABORTED)
@@ -760,6 +764,19 @@ def test_recover_leaves_complete_and_pending_untouched(db):
     assert db.get_utterance(UtteranceId("u1")).analysis_status == AnalysisStatus.COMPLETE
     assert db.get_utterance(UtteranceId("u2")).analysis_status == AnalysisStatus.PENDING
     assert db.get_utterance(UtteranceId("u3")).analysis_status == AnalysisStatus.PENDING
+
+
+def test_recover_preserves_failed_fact_checks(db):
+    """FAILED fact checks are preserved so users can retry them manually."""
+    _setup_analysis_chain(db)
+    conn = db._get_conn()
+    conn.execute("UPDATE annotations SET fact_check_status = 'failed' WHERE id = 'ann-1'")
+    conn.commit()
+
+    db.recover_incomplete_work()
+
+    ann = db.get_annotation(AnnotationId("ann-1"))
+    assert ann.fact_check_status == FactCheckStatus.FAILED
 
 
 def test_recover_review_processing(db):

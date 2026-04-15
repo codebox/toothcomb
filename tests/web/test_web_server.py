@@ -400,13 +400,19 @@ class TestReplayFactCheck:
 
         server._emitter.fact_check.assert_not_called()
 
-    def test_failed_fact_check_not_emitted(self):
+    def test_failed_fact_check_emitted(self):
+        """Failed fact checks are replayed so the UI can show them and offer retry."""
         server, _ = _make_server()
-        ann = _annotation("a1", fc_status=FactCheckStatus.FAILED)
+        ann = _annotation(
+            "a1", fc_status=FactCheckStatus.FAILED, fc_note="API error",
+        )
 
         server._replay_fact_check(JobId("j1"), ann, to="sid")
 
-        server._emitter.fact_check.assert_not_called()
+        server._emitter.fact_check.assert_called_once_with(
+            JobId("j1"), AnnotationId("a1"),
+            "FAILED", "API error", to="sid",
+        )
 
     def test_processing_fact_check_not_emitted(self):
         server, _ = _make_server()

@@ -9,7 +9,7 @@ from config import Config
 from db.database import Database
 from domain.analysed_text import AnalysedText
 from domain.transcript import Utterance
-from domain.types import JobId, JobStatus, AnalysisStatus, FactCheckStatus
+from domain.types import JobId, JobStatus, AnalysisStatus, FactCheckStatus, AnnotationId
 from job.job_builder import JobBuilder
 from job.job_runner import JobRunner
 from web.socket_emitter import SocketEmitter
@@ -145,6 +145,22 @@ class WebServer:
             self._emitter.job_status(jid, JobStatus.ABORTED, room="lobby")
             return jsonify({"job_id": job_id, "status": "aborted"}), 200
 
+        @app.route("/jobs/<job_id>/annotations/<annotation_id>/retry-fact-check", methods=["POST"])
+        def retry_fact_check(job_id, annotation_id):
+            blocked = self._demo_guard()
+            if blocked:
+                return blocked
+            jid = JobId(job_id)
+            if not self._database.get_job(jid):
+                return jsonify({"error": "Job not found"}), 404
+
+            reset = self._database.reset_annotation_fact_check(AnnotationId(annotation_id))
+            if not reset:
+                return jsonify({"error": "Annotation not found or has no fact check"}), 404
+
+            self._emitter.fact_check_reset(jid, AnnotationId(annotation_id), room=jid)
+            return jsonify({"job_id": job_id, "annotation_id": annotation_id}), 200
+
         @app.route("/jobs/<job_id>", methods=["DELETE"])
         def delete_job(job_id):
             blocked = self._demo_guard()
@@ -257,6 +273,12 @@ class WebServer:
                 job_id, annotation.id,
                 annotation.fact_check_verdict, annotation.fact_check_note,
                 citations=annotation.fact_check_citations,
+                to=to,
+            )
+        elif annotation.fact_check_status == FactCheckStatus.FAILED:
+            self._emitter.fact_check(
+                job_id, annotation.id,
+                "FAILED", annotation.fact_check_note or "",
                 to=to,
             )
 

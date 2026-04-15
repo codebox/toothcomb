@@ -555,7 +555,7 @@ class SQLiteDatabase(Database):
             JOIN utterances u ON ar.utterance_id = u.id
             JOIN jobs j ON u.job_id = j.id
             WHERE a.fact_check_query IS NOT NULL AND a.fact_check_status = 'pending'
-            AND j.status IN ('ingesting', 'analysing', 'reviewing')
+            AND j.status IN ('ingesting', 'analysing', 'reviewing', 'complete')
             LIMIT 1
         """).fetchone()
 
@@ -593,6 +593,20 @@ class SQLiteDatabase(Database):
             (note, annotation_id),
         )
         conn.commit()
+
+    def reset_annotation_fact_check(self, annotation_id: AnnotationId) -> bool:
+        conn = self._get_conn()
+        cursor = conn.execute(
+            """UPDATE annotations
+               SET fact_check_status = 'pending',
+                   fact_check_verdict = NULL,
+                   fact_check_note = NULL,
+                   fact_check_citations = NULL
+               WHERE id = ? AND fact_check_query IS NOT NULL""",
+            (annotation_id,),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
 
     def get_annotation(self, annotation_id: AnnotationId) -> Optional[Annotation]:
         row = self._get_conn().execute(
@@ -753,10 +767,17 @@ class SQLiteDatabase(Database):
     # -- Recovery --
 
     def recover_incomplete_work(self) -> None:
-        """Reset any in-progress or failed items back to pending so they are retried."""
+        """Reset any in-progress items back to pending so they are retried on restart.
+
+        Utterance analysis: both 'processing' and 'failed' are reset, since there's no
+        manual retry UI for analysis failures.
+
+        Fact checks: only 'processing' is reset. 'failed' results are preserved so the
+        user can decide whether to retry them manually via the retry button in the UI.
+        """
         conn = self._get_conn()
         conn.execute("UPDATE utterances SET analysis_status = 'pending' WHERE analysis_status IN ('processing', 'failed')")
-        conn.execute("UPDATE annotations SET fact_check_status = 'pending' WHERE fact_check_status IN ('processing', 'failed')")
+        conn.execute("UPDATE annotations SET fact_check_status = 'pending' WHERE fact_check_status = 'processing'")
         conn.execute("""
             UPDATE jobs SET review_claimed = 0
             WHERE review_claimed = 1 AND status = 'reviewing'

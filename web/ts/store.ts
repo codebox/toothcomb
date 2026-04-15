@@ -18,6 +18,7 @@ import {
     AnalysisEvent,
     UtterancesMergedEvent,
     FactCheckEvent,
+    FactCheckResetEvent,
     JobStatsEvent,
     ReplayCompleteEvent,
     ReviewData,
@@ -84,7 +85,7 @@ export function buildJobStore(): JobStore {
 
     function countStats(): StatCounts {
         const counts = {claims: 0, predictions: 0, commitments: 0, fallacies: 0, rhetoric: 0, tactics: 0},
-            verdicts: VerdictCounts = {established: 0, misleading: 0, unsupported: 0, false: 0, pending: 0};
+            verdicts: VerdictCounts = {established: 0, misleading: 0, unsupported: 0, false: 0, pending: 0, failed: 0};
 
         if (!activeJob) {
             return {...counts, verdicts};
@@ -185,6 +186,13 @@ export function buildJobStore(): JobStore {
         }
     }
 
+    function handleFactCheckReset(data: FactCheckResetEvent): void {
+        if (data.job_id === activeJobId && activeJob) {
+            delete activeJob.factChecks[data.annotation_id];
+            emit('changed');
+        }
+    }
+
     function handleJobStats(data: JobStatsEvent): void {
         if (data.job_id === activeJobId && activeJob) {
             activeJob.stats = data.stats;
@@ -223,6 +231,7 @@ export function buildJobStore(): JobStore {
         handleAnalysis,
         handleUtterancesMerged,
         handleFactCheck,
+        handleFactCheckReset,
         handleJobStats,
         handleReview,
         handleReplayComplete,

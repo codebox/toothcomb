@@ -1,15 +1,25 @@
 // ── Marginalia View ──
 
+import {buildEmitter} from '../events';
 import {tmpl, makeEl, determineVerdict} from './utils';
 import {MarginaliaView, MarginaliaData, Annotation, FactCheck, ReviewFinding} from '../types';
 
 export function buildMarginaliaView(): MarginaliaView {
-    const elCol = document.getElementById('marginCol');
-    let userScrolledUp = false;
+    const {on, emit} = buildEmitter(),
+        elCol = document.getElementById('marginCol');
+    let userScrolledUp = false,
+        demoMode = false;
 
     if (elCol) {
         elCol.addEventListener('scroll', function (this: HTMLElement) {
             userScrolledUp = (this.scrollTop + this.clientHeight) < (this.scrollHeight - 50);
+        });
+
+        elCol.addEventListener('click', (e: MouseEvent) => {
+            const elBtn = (e.target as HTMLElement).closest('.margin-retry') as HTMLElement | null;
+            if (elBtn && elBtn.dataset.annotationId) {
+                emit('retryFactCheck', elBtn.dataset.annotationId);
+            }
         });
     }
 
@@ -36,6 +46,11 @@ export function buildMarginaliaView(): MarginaliaView {
             elLabel.textContent = fc.verdict + ':';
             elLabel.classList.add(fc.verdict.toLowerCase());
             elVerdict.querySelector('.margin-verdict-text')!.textContent = fc.note;
+            if (fc.verdict === 'FAILED' && !demoMode) {
+                const elRetry = elNote.querySelector('.margin-retry') as HTMLButtonElement;
+                elRetry.hidden = false;
+                elRetry.dataset.annotationId = ann.annotation_id;
+            }
             if (fc.citations && fc.citations.length > 0) {
                 const elDetails = document.createElement('details');
                 elDetails.className = 'margin-citations';
@@ -99,6 +114,7 @@ export function buildMarginaliaView(): MarginaliaView {
         }
 
         const {utterances, analysis, factChecks, review} = data;
+        demoMode = data.demo;
         let refNum = 0;
 
         utterances.forEach(utt => {
@@ -132,5 +148,5 @@ export function buildMarginaliaView(): MarginaliaView {
         }
     }
 
-    return {render};
+    return {on, render};
 }
