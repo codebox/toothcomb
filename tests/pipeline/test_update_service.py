@@ -409,16 +409,17 @@ class TestReviewCompleted:
 
 class TestReviewFailed:
 
-    def test_marks_failed_and_emits(self, db, emitter, svc):
+    def test_leaves_job_in_reviewing_for_retry(self, db, emitter, svc):
+        """Review failures don't mark the job as failed — job stays in reviewing
+        so it gets retried on next restart."""
         db.create_job(_job())
         db.update_job_status(JobId("job-1"), JobStatus.REVIEWING)
 
         svc.review_failed(JobId("job-1"))
 
-        assert db.get_job(JobId("job-1")).status == JobStatus.FAILED
-        emitter.transcript_review.assert_called_once()
-        emitter.job_status.assert_called_once_with(
-            JobId("job-1"), JobStatus.FAILED, room="lobby")
+        assert db.get_job(JobId("job-1")).status == JobStatus.REVIEWING
+        emitter.transcript_review.assert_not_called()
+        emitter.job_status.assert_not_called()
 
     def test_dropped_if_job_deleted(self, db, emitter, svc):
         svc.review_failed(JobId("nope"))

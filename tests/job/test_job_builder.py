@@ -23,23 +23,13 @@ class _FakeConfig:
         return self._values.get(key, default)
 
 
-class _FakePipeline:
-    transcription_worker = None
-
-
-class _FakeUpdateService:
-    def flush_remaining_buffer(self, job_id): pass
-    def check_job_complete(self, job_id): pass
-    def utterance_transcribed(self, utterance): pass
-
-
 @pytest.fixture
 def env(tmp_path):
     """Provide a JobBuilder wired to an in-memory DB and tmp uploads dir."""
     uploads = str(tmp_path / "uploads")
     config = _FakeConfig(uploads)
     db = SQLiteDatabase(":memory:")
-    builder = JobBuilder(config, _FakePipeline(), db, _FakeUpdateService())
+    builder = JobBuilder(config, db)
     return builder, db, tmp_path, uploads
 
 
@@ -174,7 +164,7 @@ class TestBuildFromDict:
         builder, _, tmp_path, _ = env
         # Use a nested path that doesn't exist yet
         nested_uploads = str(tmp_path / "deep" / "nested" / "uploads")
-        builder.config._values["paths.uploads"] = nested_uploads
+        builder._config._values["paths.uploads"] = nested_uploads
 
         builder.build_from_dict(_text_source_data("some text"))
         assert Path(nested_uploads).is_dir()
@@ -215,9 +205,3 @@ class TestSetSourcePath:
             builder.set_source_path(JobId("nope"), "file.txt")
 
 
-# ---------- get_streaming_source ----------
-
-
-def test_get_streaming_source_returns_none_for_unknown(env):
-    builder, _, _, _ = env
-    assert builder.get_streaming_source(JobId("nope")) is None

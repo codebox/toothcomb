@@ -18,7 +18,7 @@ def test_job_status_values():
     assert JobStatus.ANALYSING.value == "analysing"
     assert JobStatus.REVIEWING.value == "reviewing"
     assert JobStatus.COMPLETE.value == "complete"
-    assert JobStatus.FAILED.value == "failed"
+    assert JobStatus.ABORTED.value == "aborted"
 
 
 def test_analysis_status_values():

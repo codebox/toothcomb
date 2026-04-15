@@ -269,6 +269,7 @@ def test_next_utterance_seq(db):
 
 def test_claim_utterance_first_is_claimable(db):
     db.create_job(_job())
+    db.update_job_status(JobId("job-1"), JobStatus.ANALYSING)
     db.create_utterance(_utterance("u1", seq=1))
     # Change status from buffered to pending so it's claimable
     db._get_conn().execute(
@@ -286,6 +287,7 @@ def test_claim_utterance_first_is_claimable(db):
 
 def test_claim_utterance_blocked_by_pending_predecessor(db):
     db.create_job(_job())
+    db.update_job_status(JobId("job-1"), JobStatus.ANALYSING)
     db.create_utterance(_utterance("u1", seq=1))
     db.create_utterance(_utterance("u2", seq=2))
     # Set both to pending
@@ -304,6 +306,7 @@ def test_claim_utterance_blocked_by_pending_predecessor(db):
 
 def test_claim_utterance_unblocked_after_predecessor_complete(db):
     db.create_job(_job())
+    db.update_job_status(JobId("job-1"), JobStatus.ANALYSING)
     db.create_utterance(_utterance("u1", seq=1))
     db.create_utterance(_utterance("u2", seq=2))
     conn = db._get_conn()
@@ -551,8 +554,8 @@ def test_claim_fact_check_only_active_jobs(db):
     db.update_job_status(JobId("job-1"), JobStatus.COMPLETE)
     assert db.claim_fact_check() is None
 
-    # Move to failed — should NOT be claimable
-    db.update_job_status(JobId("job-1"), JobStatus.FAILED)
+    # Move to aborted — should NOT be claimable
+    db.update_job_status(JobId("job-1"), JobStatus.ABORTED)
     assert db.claim_fact_check() is None
 
 
@@ -639,6 +642,7 @@ def test_claim_utterance_nothing_pending(db):
 def test_claim_utterance_unblocked_by_failed_predecessor(db):
     """A failed predecessor should unblock the next utterance (failed counts as 'done')."""
     db.create_job(_job())
+    db.update_job_status(JobId("job-1"), JobStatus.ANALYSING)
     db.create_utterance(_utterance("u1", seq=1))
     db.create_utterance(_utterance("u2", seq=2))
     conn = db._get_conn()

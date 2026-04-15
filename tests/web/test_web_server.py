@@ -136,15 +136,15 @@ class TestStartJob:
 
     def test_starts_existing_job(self):
         server, db = _make_server()
-        builder = MagicMock()
+        runner = MagicMock()
         db.get_job.return_value = _job("j1")
-        server.set_job_builder(builder)
+        server.set_job_runner(runner)
 
         with server._app.test_client() as client:
             resp = client.post("/jobs/j1/start")
 
         assert resp.status_code == 200
-        builder.start_job.assert_called_once_with(JobId("j1"))
+        runner.start_job.assert_called_once_with(JobId("j1"))
         server._emitter.job_status.assert_called_once_with(
             JobId("j1"), JobStatus.INGESTING, room="lobby")
 
@@ -347,7 +347,7 @@ class TestReplayAnalysis:
         emitter.fact_check.assert_called_once_with(
             JobId("j1"), AnnotationId("a1"),
             "established", "Confirmed",
-            to="sid",
+            citations=None, to="sid",
         )
 
     def test_no_fact_check_when_none_complete(self):
@@ -389,7 +389,7 @@ class TestReplayFactCheck:
 
         server._emitter.fact_check.assert_called_once_with(
             JobId("j1"), AnnotationId("a1"),
-            "false", "Debunked", to="sid",
+            "false", "Debunked", citations=None, to="sid",
         )
 
     def test_pending_fact_check_not_emitted(self):

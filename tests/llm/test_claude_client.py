@@ -143,6 +143,7 @@ class TestTools:
 class TestErrorHandling:
 
     def test_rate_limit_error_reraised(self):
+        from llm.rate_limit_tracker import RateLimitThrottled
         client, mock_api = _make_client()
         mock_api.messages.create.side_effect = anthropic.RateLimitError(
             message="rate limited",
@@ -150,7 +151,8 @@ class TestErrorHandling:
             body={"error": {"message": "rate limited"}},
         )
 
-        with pytest.raises(anthropic.RateLimitError):
+        # Anthropic RateLimitError is converted to RateLimitThrottled
+        with pytest.raises(RateLimitThrottled):
             client.send(Prompt("sys", "user"))
 
 

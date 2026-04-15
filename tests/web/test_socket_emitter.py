@@ -176,6 +176,7 @@ class TestFactCheck:
             "job_id": "j1",
             "verdict": "established",
             "note": "Confirmed",
+            "citations": [],
         }, room="lobby")
 
 

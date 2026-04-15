@@ -7,7 +7,7 @@ from domain.analysed_text import Annotation, AnnotationType, AnalysedText, Analy
 from domain.job import Job
 from domain.llm_usage import LLMUsage
 from domain.transcript import Utterance
-from domain.transcript_review import TranscriptReview, ReviewFinding, FindingReference
+from domain.transcript_review import TranscriptReview, ReviewFinding
 from domain.types import (
     JobId, UtteranceId, AnnotationId, AnalysisResultId, ModelName,
     JobStatus,
@@ -100,10 +100,7 @@ class TestProcessSuccess:
         finding = ReviewFinding(
             type=AnnotationType.TACTIC, technique="Self-Contradiction",
             summary="Contradicted",
-            references=(
-                FindingReference(excerpt="a", location="l1"),
-                FindingReference(excerpt="b", location="l2"),
-            ),
+            refs=("ann-1", "ann-2"),
         )
         review = TranscriptReview(job_id=JobId("job-1"), findings=(finding,))
         reviewer = _make_reviewer(review=review)

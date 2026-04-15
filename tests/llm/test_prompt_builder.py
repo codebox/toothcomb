@@ -122,7 +122,8 @@ class TestRenderAnnotatedTranscript:
         analysis = AnalysedText(utterance_id=UtteranceId("u1"), text="t",
                                 analysed_parts=(part,))
         result = PromptBuilder._render_annotated_transcript([analysis])
-        assert "The economy will grow [PREDICTION: GDP will rise]" in result
+        # Annotation ID is prefixed before the type/notes marker
+        assert f"The economy will grow [{ann.id} PREDICTION: GDP will rise]" in result
 
     def test_multiple_annotations_on_one_part(self):
         ann1 = Annotation(type=AnnotationType.CLAIM, notes="GDP claim",

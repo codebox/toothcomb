@@ -12,7 +12,7 @@ def test_verdict_values():
 def test_to_dict():
     result = FactCheckResult(verdict=Verdict.ESTABLISHED, note="Confirmed by sources")
     d = result.to_dict()
-    assert d == {"verdict": "established", "note": "Confirmed by sources"}
+    assert d == {"verdict": "established", "note": "Confirmed by sources", "citations": []}
 
 
 def test_to_dict_excludes_usage():

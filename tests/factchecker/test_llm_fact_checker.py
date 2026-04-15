@@ -31,7 +31,7 @@ class _FakePromptBuilder:
 class _TestableLLMFactChecker(LLMFactChecker):
     """Concrete subclass that returns canned LLM responses."""
     def __init__(self, responses: list[LLMResponse], config=None):
-        super().__init__(config or _FakeConfig(), _FakePromptBuilder())
+        super().__init__(config or _FakeConfig(), _FakePromptBuilder(), claude_client=None)
         self._responses = list(responses)
         self._call_count = 0
 
@@ -85,7 +85,7 @@ class TestParseLLMResponse:
             LLMFactChecker._parse_llm_fact_check_response("this is not json", "q")
 
     def test_json_array_raises(self):
-        with pytest.raises(LLMResponseError, match="missing required 'verdict'"):
+        with pytest.raises(LLMResponseError, match="not a JSON object"):
             LLMFactChecker._parse_llm_fact_check_response('[1, 2, 3]', "q")
 
     def test_missing_verdict_raises(self):
@@ -183,10 +183,3 @@ class TestFactCheckRetries:
             checker.fact_check("query")
 
 
-# ---------- base class ----------
-
-
-def test_send_prompt_to_llm_not_implemented():
-    checker = LLMFactChecker(_FakeConfig(), _FakePromptBuilder())
-    with pytest.raises(NotImplementedError):
-        checker.send_prompt_to_llm(Prompt("s", "u"))

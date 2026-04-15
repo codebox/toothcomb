@@ -44,13 +44,13 @@ class _FakeConfig:
 
 
 class _FakePromptBuilder:
-    def build_analyser_prompt(self, job_config, utterance, previous):
+    def build_analyser_prompt(self, job_config, utterance, previous, following_text=""):
         return Prompt(system_prompt="sys", user_prompt=utterance.text)
 
 
 class _TestableLLMTextAnalyser(LLMTextAnalyser):
     def __init__(self, responses, config=None):
-        super().__init__(config or _FakeConfig(), _FakePromptBuilder())
+        super().__init__(config or _FakeConfig(), _FakePromptBuilder(), claude_client=None)
         self._responses = list(responses)
         self._call_count = 0
 
@@ -166,7 +166,7 @@ class TestParseResponse:
             LLMTextAnalyser._parse_llm_analyse_response("not json at all", _SOURCE)
 
     def test_json_array_raises(self):
-        with pytest.raises(LLMResponseError, match="missing required 'analysedParts'"):
+        with pytest.raises(LLMResponseError, match="not a JSON object"):
             LLMTextAnalyser._parse_llm_analyse_response("[1, 2]", _SOURCE)
 
     def test_missing_analysed_parts_raises(self):
@@ -392,10 +392,3 @@ class TestAnalyseRetries:
             analyser.analyse(self._utterance_with_context(), self._job_config())
 
 
-# ---------- base class ----------
-
-
-def test_send_prompt_to_llm_not_implemented():
-    analyser = LLMTextAnalyser(_FakeConfig(), _FakePromptBuilder())
-    with pytest.raises(NotImplementedError):
-        analyser.send_prompt_to_llm(Prompt("s", "u"))

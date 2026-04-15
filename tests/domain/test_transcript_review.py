@@ -1,26 +1,19 @@
-from domain.transcript_review import FindingReference, ReviewFinding, TranscriptReview
+from domain.transcript_review import ReviewFinding, TranscriptReview
 from domain.analysed_text import AnnotationType
 from domain.types import JobId
 
 
-def test_finding_reference_to_dict():
-    ref = FindingReference(excerpt="some quote", location="para 3")
-    assert ref.to_dict() == {"excerpt": "some quote", "location": "para 3"}
-
-
 def test_review_finding_to_dict():
-    ref = FindingReference(excerpt="quote", location="p1")
     finding = ReviewFinding(
         id="f1", type=AnnotationType.FALLACY, technique="strawman",
-        summary="Misrepresented argument", references=(ref,),
+        summary="Misrepresented argument", refs=("ann-1", "ann-2"),
     )
     d = finding.to_dict()
     assert d["id"] == "f1"
     assert d["type"] == "FALLACY"
     assert d["technique"] == "strawman"
     assert d["summary"] == "Misrepresented argument"
-    assert len(d["references"]) == 1
-    assert d["references"][0]["excerpt"] == "quote"
+    assert d["refs"] == ["ann-1", "ann-2"]
 
 
 def test_review_finding_auto_generates_id():
@@ -29,9 +22,20 @@ def test_review_finding_auto_generates_id():
     assert a.id != b.id
 
 
-def test_review_finding_empty_references():
+def test_review_finding_empty_refs():
     finding = ReviewFinding(type=AnnotationType.RHETORIC, technique="t", summary="s")
-    assert finding.to_dict()["references"] == []
+    assert finding.to_dict()["refs"] == []
+
+
+def test_review_finding_excerpt_in_dict():
+    finding = ReviewFinding(type=AnnotationType.FALLACY, technique="t",
+                            summary="s", excerpt="quoted text")
+    assert finding.to_dict()["excerpt"] == "quoted text"
+
+
+def test_review_finding_excerpt_defaults_to_none():
+    finding = ReviewFinding(type=AnnotationType.FALLACY, technique="t", summary="s")
+    assert finding.to_dict()["excerpt"] is None
 
 
 def test_transcript_review_to_dict():

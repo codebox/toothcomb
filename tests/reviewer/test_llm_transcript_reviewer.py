@@ -29,7 +29,7 @@ class _FakePromptBuilder:
 
 class _TestableLLMReviewer(LLMTranscriptReviewer):
     def __init__(self, responses: list[LLMResponse], config=None):
-        super().__init__(config or _FakeConfig(), _FakePromptBuilder())
+        super().__init__(config or _FakeConfig(), _FakePromptBuilder(), claude_client=None)
         self._responses = list(responses)
         self._call_count = 0
 
@@ -73,10 +73,7 @@ class TestParseLLMReviewResponse:
                 "type": "TACTIC",
                 "technique": "Self-Contradiction",
                 "summary": "Speaker contradicted themselves.",
-                "references": [
-                    {"excerpt": "I love cats", "location": "line 1"},
-                    {"excerpt": "I hate cats", "location": "line 5"}
-                ]
+                "refs": ["ann-1", "ann-2"]
             }]
         }'''
         result = LLMTranscriptReviewer._parse_llm_review_response(json_str, JobId("j1"))
@@ -85,23 +82,22 @@ class TestParseLLMReviewResponse:
         assert finding.type == AnnotationType.TACTIC
         assert finding.technique == "Self-Contradiction"
         assert finding.summary == "Speaker contradicted themselves."
-        assert len(finding.references) == 2
-        assert finding.references[0].excerpt == "I love cats"
+        assert finding.refs == ("ann-1", "ann-2")
 
     def test_multiple_findings(self):
         json_str = '''{
             "findings": [
-                {"type": "TACTIC", "technique": "Gish Gallop", "summary": "s1", "references": []},
-                {"type": "RHETORIC", "technique": "Moving Goalposts", "summary": "s2", "references": []}
+                {"type": "TACTIC", "technique": "Gish Gallop", "summary": "s1", "refs": []},
+                {"type": "RHETORIC", "technique": "Moving Goalposts", "summary": "s2", "refs": []}
             ]
         }'''
         result = LLMTranscriptReviewer._parse_llm_review_response(json_str, JobId("j1"))
         assert len(result.findings) == 2
 
-    def test_finding_without_references(self):
+    def test_finding_without_refs(self):
         json_str = '{"findings": [{"type": "FALLACY", "technique": "t", "summary": "s"}]}'
         result = LLMTranscriptReviewer._parse_llm_review_response(json_str, JobId("j1"))
-        assert result.findings[0].references == ()
+        assert result.findings[0].refs == ()
 
     def test_json_in_code_fence(self):
         text = '```json\n{"findings": []}\n```'
@@ -184,10 +180,3 @@ class TestReviewRetries:
         assert result.usage is None
 
 
-# ---------- base class ----------
-
-
-def test_send_prompt_to_llm_not_implemented():
-    reviewer = LLMTranscriptReviewer(_FakeConfig(), _FakePromptBuilder())
-    with pytest.raises(NotImplementedError):
-        reviewer.send_prompt_to_llm(Prompt("s", "u"))
