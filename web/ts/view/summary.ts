@@ -68,7 +68,7 @@ export function buildSummaryView(): SummaryView {
 
         // Verdict breakdown
         elMain.appendChild(makeEl('div', 'section-label', 'Fact-Check Verdicts'));
-        const elVerdicts = makeEl('div', ''),
+        const elVerdicts = makeEl('div', 'verdict-breakdown'),
             totalChecks = Math.max(1,
                 verdicts.established + verdicts.misleading + verdicts.unsupported
                 + verdicts.false + verdicts.pending + verdicts.failed),
@@ -80,7 +80,6 @@ export function buildSummaryView(): SummaryView {
                 ['Pending', verdicts.pending, 'pending'],
                 ['Failed', verdicts.failed, 'failed'],
             ];
-        elVerdicts.style.marginBottom = '20px';
         verdictRows.forEach(([label, count, cls]) => {
             const pct = Math.round((count / totalChecks) * 100),
                 elRow = tmpl('tmpl-verdict-row'),

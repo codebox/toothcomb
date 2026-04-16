@@ -377,6 +377,9 @@ body {
 }
 
 /* Verdict breakdown */
+.verdict-breakdown {
+  margin-bottom: 20px;
+}
 .verdict-row {
   display: flex;
   align-items: center;
@@ -1175,34 +1178,104 @@ body {
   .summary-col-wrapper {
     display: contents;
   }
+  .masthead-title {
+    font-size: 32px;
+  }
+
+  /* Summary (top) */
   .summary-main {
     grid-area: summary-main;
-    padding: 24px;
+    padding: 16px 24px;
     border-bottom: 1px solid var(--rule);
   }
-  .summary-footer {
-    grid-area: summary-footer;
-    padding: 24px;
-    border-top: 1px solid var(--rule);
+  .summary-main .headline {
+    font-size: 22px;
+    line-height: 1.2;
+    text-align: center;
+    margin-bottom: 8px;
   }
-  .headline { font-size: 20px; }
+  .summary-main .meta-row {
+    display: block;
+    padding: 8px 0;
+  }
+  .summary-main .meta-key {
+    display: block;
+    margin-bottom: 2px;
+  }
+  .summary-main .meta-value {
+    display: block;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .summary-main .section-label,
+  .summary-footer .section-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+  .summary-main .verdict-breakdown {
+    margin-bottom: 0;
+  }
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Transcript (middle) */
   .transcript-col {
     grid-area: transcript;
     border-right: none;
-    padding: 0 24px 24px;
+    padding: 0 24px 12px;
     max-height: none;
+  }
+  .transcript-text {
+    text-align: left;
+    hyphens: manual;
   }
   .status-bar {
     margin: 0 -24px;
     padding: 10px 24px;
   }
+  .status-bar-label {
+    font-size: 11px;
+    letter-spacing: 0.8px;
+  }
+  .status-bar-dot {
+    width: 8px;
+    height: 8px;
+  }
+  .inline-notes .margin-verdict {
+    line-height: 1.3;
+  }
+
+  /* Summary (bottom) */
+  .summary-footer {
+    grid-area: summary-footer;
+    padding: 12px 24px 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .summary-footer .section-label:first-child {
+    margin-top: 8px;
+  }
+  .summary-footer .usage-item {
+    font-size: 13px;
+    padding: 5px 0;
+  }
+  .summary-footer .usage-model-label {
+    font-size: 12px;
+    margin-top: 12px;
+  }
+  .summary-footer .btn-delete-job {
+    font-size: 13px;
+    padding: 10px 0;
+    margin-top: 20px;
+  }
+
   .margin-col {
     display: none;
   }
 }
 @media (max-width: 600px) {
-  .masthead-title { font-size: 24px; letter-spacing: 3px; }
+  .masthead-title { letter-spacing: 3px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .transcript-text { font-size: 15px; }
   .stream-options { flex-direction: column; }

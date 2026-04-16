@@ -35,7 +35,7 @@ export function buildAnnotationView(elTranscriptCol: HTMLElement): AnnotationVie
         }
     }
 
-    function select(elMark: HTMLElement, elNotes: HTMLElement[], push: boolean = true): void {
+    function select(elMark: HTMLElement, elNotes: HTMLElement[], push: boolean = true, scroll: boolean = true): void {
         clearSelection();
         clearFindingHighlight();
         sel = {elMark, elNotes, elInline: null};
@@ -56,11 +56,15 @@ export function buildAnnotationView(elTranscriptCol: HTMLElement): AnnotationVie
                 });
                 elParagraph.after(elInline);
                 sel.elInline = elInline;
-                elInline.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                if (scroll) {
+                    elInline.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                }
             }
         } else {
             elNotes.forEach(n => n.classList.add('highlighted'));
-            elNotes[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+            if (scroll) {
+                elNotes[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+            }
         }
     }
 
@@ -214,13 +218,18 @@ export function buildAnnotationView(elTranscriptCol: HTMLElement): AnnotationVie
             });
         });
 
-        // Restore selection from URL hash (e.g. #jobId/3)
+        // Restore selection from URL hash (e.g. #jobId/3).
+        // setup() runs on every render; only scroll the first time we
+        // restore this ref, otherwise the page jumps each time data arrives.
         const hashRef = location.hash.slice(1).split('/')[1];
         if (hashRef) {
             const entry = refToMark[hashRef];
             if (entry) {
-                select(entry.elMark, entry.elNotes, false);
-                entry.elMark.scrollIntoView({behavior: 'instant', block: 'center'});
+                const alreadySelected = sel.elMark?.dataset?.ref === hashRef;
+                select(entry.elMark, entry.elNotes, false, !alreadySelected);
+                if (!alreadySelected) {
+                    entry.elMark.scrollIntoView({behavior: 'instant', block: 'center'});
+                }
             }
         }
     }
