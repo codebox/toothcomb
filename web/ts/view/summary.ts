@@ -6,7 +6,8 @@ import {SummaryView, SummaryData} from '../types';
 
 export function buildSummaryView(): SummaryView {
     const {on, emit} = buildEmitter(),
-        elCol = document.getElementById('summaryCol');
+        elMain = document.getElementById('summaryMain'),
+        elFooter = document.getElementById('summaryFooter');
 
     function makeUsageItem(key: string, value: string): HTMLElement {
         const elItem = tmpl('tmpl-usage-item');
@@ -16,10 +17,11 @@ export function buildSummaryView(): SummaryView {
     }
 
     function render(data: SummaryData | null): void {
-        if (!elCol) {
+        if (!elMain || !elFooter) {
             return;
         }
-        elCol.innerHTML = '';
+        elMain.innerHTML = '';
+        elFooter.innerHTML = '';
         if (!data) {
             return;
         }
@@ -27,7 +29,7 @@ export function buildSummaryView(): SummaryView {
         const {title, status, context, stats, verdicts, llmStats} = data;
 
         // Title
-        elCol.appendChild(makeEl('h1', 'headline', title));
+        elMain.appendChild(makeEl('h1', 'headline', title));
 
         // Metadata
         const elMetaTable = makeEl('div', 'meta-table'),
@@ -46,10 +48,10 @@ export function buildSummaryView(): SummaryView {
             elRow.querySelector('.meta-value')!.textContent = val;
             elMetaTable.appendChild(elRow);
         });
-        elCol.appendChild(elMetaTable);
+        elMain.appendChild(elMetaTable);
 
         // Annotation stats
-        elCol.appendChild(makeEl('div', 'section-label', 'Annotations Found'));
+        elMain.appendChild(makeEl('div', 'section-label', 'Annotations Found'));
         const elStatsGrid = makeEl('div', 'stats-grid'),
             statPairs: [string, number][] = [
                 ['Claims', stats.claims], ['Predictions', stats.predictions],
@@ -62,10 +64,10 @@ export function buildSummaryView(): SummaryView {
             elCell.querySelector('.stat-label')!.textContent = label;
             elStatsGrid.appendChild(elCell);
         });
-        elCol.appendChild(elStatsGrid);
+        elMain.appendChild(elStatsGrid);
 
         // Verdict breakdown
-        elCol.appendChild(makeEl('div', 'section-label', 'Fact-Check Verdicts'));
+        elMain.appendChild(makeEl('div', 'section-label', 'Fact-Check Verdicts'));
         const elVerdicts = makeEl('div', ''),
             totalChecks = Math.max(1,
                 verdicts.established + verdicts.misleading + verdicts.unsupported
@@ -89,20 +91,20 @@ export function buildSummaryView(): SummaryView {
             elRow.querySelector('.verdict-count')!.textContent = String(count);
             elVerdicts.appendChild(elRow);
         });
-        elCol.appendChild(elVerdicts);
+        elMain.appendChild(elVerdicts);
 
         // Token usage — per-model breakdown
-        elCol.appendChild(makeEl('div', 'section-label', 'Token Usage'));
+        elFooter.appendChild(makeEl('div', 'section-label', 'Token Usage'));
         if (llmStats && llmStats.length > 0) {
             llmStats.forEach(s => {
-                elCol.appendChild(makeEl('div', 'usage-model-label', s.model));
-                elCol.appendChild(makeUsageItem('Input', formatTokens(s.input_tokens)));
-                elCol.appendChild(makeUsageItem('Output', formatTokens(s.output_tokens)));
+                elFooter.appendChild(makeEl('div', 'usage-model-label', s.model));
+                elFooter.appendChild(makeUsageItem('Input', formatTokens(s.input_tokens)));
+                elFooter.appendChild(makeUsageItem('Output', formatTokens(s.output_tokens)));
                 if (s.cache_read_tokens > 0) {
-                    elCol.appendChild(makeUsageItem('Cache reads', formatTokens(s.cache_read_tokens)));
+                    elFooter.appendChild(makeUsageItem('Cache reads', formatTokens(s.cache_read_tokens)));
                 }
                 if (s.cache_creation_tokens > 0) {
-                    elCol.appendChild(makeUsageItem('Cache writes', formatTokens(s.cache_creation_tokens)));
+                    elFooter.appendChild(makeUsageItem('Cache writes', formatTokens(s.cache_creation_tokens)));
                 }
             });
         }
@@ -110,10 +112,10 @@ export function buildSummaryView(): SummaryView {
         // Delete button
         const elDeleteBtn = makeEl('button', 'btn-delete-job', 'Delete Transcript');
         (elDeleteBtn as HTMLElement).dataset.action = 'delete-job';
-        elCol.appendChild(elDeleteBtn);
+        elFooter.appendChild(elDeleteBtn);
     }
 
-    elCol!.addEventListener('click', (e: MouseEvent) => {
+    elFooter!.addEventListener('click', (e: MouseEvent) => {
         const elDeleteBtn = (e.target as HTMLElement).closest('[data-action="delete-job"]');
         if (elDeleteBtn) {
             emit('deleteJob');

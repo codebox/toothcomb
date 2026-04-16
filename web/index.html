@@ -24,8 +24,11 @@
 
 <!-- Page Body: 3-column -->
 <div class="page-body">
-  <!-- LEFT: Summary -->
-  <aside class="summary-col" id="summaryCol"></aside>
+  <!-- LEFT: Summary (main + footer; footer moves below transcript on mobile) -->
+  <aside class="summary-col-wrapper">
+    <div class="summary-main" id="summaryMain"></div>
+    <div class="summary-footer" id="summaryFooter"></div>
+  </aside>
 
   <!-- CENTER: Transcript -->
   <article class="transcript-col" id="transcriptCol">
