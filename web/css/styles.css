@@ -1151,14 +1151,10 @@ body {
 /* ── Inline Notes (mobile) ── */
 .inline-notes {
   margin: 12px 0 20px;
-  padding: 12px 16px;
-  border-left: 3px solid var(--rule);
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 0 4px 4px 0;
 }
 .inline-notes .margin-note {
   margin-bottom: 12px;
-  padding: 0;
+  padding: 12px 14px;
   border: none;
 }
 .inline-notes .margin-note:last-child {
@@ -1180,7 +1176,7 @@ body {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
   .transcript-col {
     border-right: none;
-    padding: 24px;
+    padding: 0 24px 24px;
     max-height: none;
   }
   .margin-col {
