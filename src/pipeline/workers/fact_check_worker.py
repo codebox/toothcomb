@@ -4,6 +4,7 @@ from config import Config
 from db.database import Database
 from domain.analysed_text import Annotation
 from domain.fact_check_result import FactCheckResult, Verdict
+from domain.llm_response_error import LLMResponseError
 from factchecker.fact_checker import FactChecker
 from llm.rate_limit_tracker import RateLimitThrottled
 from pipeline.update_service import UpdateService
@@ -43,6 +44,9 @@ class FactCheckWorker(PollingWorker):
             self._database.reset_fact_check_to_pending(annotation.id)
             self._updates.emit_rate_limited(annotation.job_id, e.retry_in_seconds)
             raise
+        except LLMResponseError as e:
+            log.exception("[%s] Fact check failed for annotation_id=%s", annotation.job_id, annotation.id)
+            result = FactCheckResult(verdict=Verdict.FAILED, note=f"Fact check failed: {e.reason}")
         except Exception:
             log.exception("[%s] Fact check failed for annotation_id=%s", annotation.job_id, annotation.id)
             result = FactCheckResult(verdict=Verdict.FAILED, note=f"Fact check failed for annotation {annotation.id}")

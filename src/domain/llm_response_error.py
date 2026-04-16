@@ -4,4 +4,5 @@ class LLMResponseError(Exception):
         if query:
             detail += f"\n\nQuery:\n{query}"
         super().__init__(detail)
+        self.reason = message
         self.llm_response = llm_response

@@ -21,3 +21,8 @@ def test_message_without_query():
 def test_is_exception():
     err = LLMResponseError("fail", llm_response="r")
     assert isinstance(err, Exception)
+
+
+def test_reason_exposes_short_message_without_response_body():
+    err = LLMResponseError("Response is not valid JSON: line 3", llm_response="huge response body")
+    assert err.reason == "Response is not valid JSON: line 3"

@@ -6,6 +6,7 @@ from db.sqlite_database import SQLiteDatabase
 from domain.analysed_text import Annotation, AnnotationType
 from domain.fact_check_result import FactCheckResult, Verdict
 from domain.job import Job
+from domain.llm_response_error import LLMResponseError
 from domain.llm_usage import LLMUsage
 from domain.transcript import Utterance
 from domain.types import (
@@ -194,6 +195,19 @@ class TestProcessException:
         updates.fact_check_completed.assert_not_called()
         note = updates.fact_check_failed.call_args[0][2]
         assert "ann-1" in note
+
+    def test_llm_response_error_records_reason_in_note(self, db, updates):
+        _setup_claimable_annotation(db)
+        err = LLMResponseError("Response is not valid JSON: line 3 column 5",
+                               llm_response="big broken payload")
+        checker = _make_checker(side_effect=err)
+        worker = _make_worker(checker, db, updates)
+
+        worker._process(db.claim_fact_check())
+
+        updates.fact_check_failed.assert_called_once()
+        note = updates.fact_check_failed.call_args[0][2]
+        assert note == "Fact check failed: Response is not valid JSON: line 3 column 5"
 
     def test_exception_still_checks_complete(self, db, updates):
         _setup_claimable_annotation(db)
