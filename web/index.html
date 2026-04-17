@@ -91,7 +91,7 @@
           <div class="drop-zone" id="dropZone">
             <div>Drop an MP3 file here or click to browse</div>
             <div class="file-name" id="fileName"></div>
-            <input type="file" id="mp3File" accept=".mp3,audio/*" style="display:none">
+            <input type="file" id="mp3File" accept=".mp3,audio/*" hidden>
           </div>
         </div>
       </div>
@@ -103,9 +103,9 @@
           <div class="drop-zone" id="playDropZone">
             <div>Drop an MP3 file here or click to browse</div>
             <div class="file-name" id="playFileName"></div>
-            <input type="file" id="playMp3File" accept=".mp3,audio/*" style="display:none">
+            <input type="file" id="playMp3File" accept=".mp3,audio/*" hidden>
           </div>
-          <div style="padding:8px 0 0;color:var(--ink-muted);font-family:'Karla',sans-serif;font-size:12px">
+          <div class="tab-hint">
             The file will be played in your browser and streamed for real-time transcription.
           </div>
         </div>
@@ -113,7 +113,7 @@
 
       <!-- Mic tab -->
       <div class="tab-content" id="tab-mic">
-        <div style="padding:12px 0;color:var(--ink-muted);font-family:'Karla',sans-serif;font-size:13px">
+        <div class="tab-hint">
           Audio will be captured from your microphone when you start the transcript.
         </div>
       </div>
@@ -127,12 +127,12 @@
 
 <!-- Abort Confirmation Modal -->
 <div class="modal-overlay" id="abortModalOverlay">
-  <div class="modal" style="width:400px">
+  <div class="modal modal-narrow">
     <div class="modal-header">
       <h2>Stop Processing</h2>
     </div>
     <div class="modal-body">
-      <p style="font-family:'Karla',sans-serif;font-size:13px;color:var(--ink-light);line-height:1.5">
+      <p class="modal-text">
         Are you sure you want to stop this job? Any in-progress analysis will complete, but no new work will be started. This cannot be undone.
       </p>
     </div>
@@ -145,12 +145,12 @@
 
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay" id="deleteModalOverlay">
-  <div class="modal" style="width:400px">
+  <div class="modal modal-narrow">
     <div class="modal-header">
       <h2>Delete Transcript</h2>
     </div>
     <div class="modal-body">
-      <p style="font-family:'Karla',sans-serif;font-size:13px;color:var(--ink-light);line-height:1.5">
+      <p class="modal-text">
         Are you sure you want to delete <strong id="deleteJobTitle"></strong>? This will permanently remove the transcript and all associated analysis data.
       </p>
     </div>
@@ -206,7 +206,7 @@
 
 <template id="tmpl-verdict-row">
   <div class="verdict-row">
-    <span class="verdict-name" style="width:72px"></span>
+    <span class="verdict-name"></span>
     <div class="verdict-bar-track"><div class="verdict-bar-fill"></div></div>
     <span class="verdict-count"></span>
   </div>

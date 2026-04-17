@@ -171,7 +171,6 @@ export function buildAnnotationView(elTranscriptCol: HTMLElement): AnnotationVie
 
         document.querySelectorAll('.anno-ref[data-ref]').forEach(el => {
             const elSup = el as HTMLElement;
-            elSup.style.cursor = 'pointer';
             elSup.addEventListener('click', (e: MouseEvent) => {
                 e.stopPropagation();
                 const entry = refToMark[elSup.dataset.ref!];
