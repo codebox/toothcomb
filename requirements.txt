@@ -1,6 +1,6 @@
 anthropic>=0.40,<1.0
 mlx-whisper>=0.4; sys_platform == 'darwin'
-faster-whisper>=1.0; sys_platform == 'linux'
+faster-whisper>=1.0; sys_platform != 'darwin'
 flask>=3.0,<4.0
 flask-socketio>=5.3,<6.0
 simple-websocket>=1.0
