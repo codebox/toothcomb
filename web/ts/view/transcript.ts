@@ -124,7 +124,7 @@ export function buildTranscriptView(): TranscriptView {
                     }
                     partHtml += text + ' ';
                 });
-                html += `<p>${partHtml.trim()}</p>`;
+                html += `<p data-utterance-id="${escAttr(utt.utterance_id)}">${partHtml.trim()}</p>`;
                 lastRemainder = anal.remainder || '';
             } else if (anal && anal.failed) {
                 if (rawTexts.length > 0) {
