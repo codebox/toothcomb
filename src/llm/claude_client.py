@@ -52,6 +52,7 @@ class ClaudeClient:
             max_tokens=self._max_tokens,
             system=[system_block],
             messages=[{"role": "user", "content": prompt.user_prompt}],
+            thinking={"type": "adaptive"},
         )
         if self._tools:
             kwargs["tools"] = self._tools

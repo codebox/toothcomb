@@ -71,12 +71,12 @@ llm:
     # api_key:
 
     # Model used for analysing utterances (extracting claims, annotations, tactics)
-    # Options: claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5
-    analysis_model: claude-opus-4-6
+    # Options: claude-opus-4-7, claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5
+    analysis_model: claude-opus-4-7
     # Model used for fact-checking individual claims via web search
     fact_check_model: claude-sonnet-4-6
     # Model used for the final whole-transcript review
-    review_model: claude-opus-4-6
+    review_model: claude-opus-4-7
 
     # Anthropic server-side web search tool version
     web_search_tool: web_search_20260209
@@ -90,8 +90,8 @@ llm:
 
     # Maximum output tokens for each LLM call type — increase if responses are truncated
     analysis_max_tokens: 8192
-    fact_check_max_tokens: 2048
-    review_max_tokens: 4096
+    fact_check_max_tokens: 4096
+    review_max_tokens: 8192
 
 pipeline:
   # Minimum word count before buffered utterances are flushed for analysis
