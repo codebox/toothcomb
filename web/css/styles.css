@@ -76,6 +76,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 body {
   font-family: 'Libre Baskerville', Georgia, serif;
