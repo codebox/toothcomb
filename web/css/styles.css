@@ -1211,14 +1211,18 @@ body {
 @media (max-width: 1100px) {
   .page-body {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto;
     grid-template-areas:
       "summary-main"
       "transcript"
-      "summary-footer";
+      "summary-footer"
+      "footer";
   }
-  .summary-col-wrapper {
+  .summary-col-wrapper,
+  .transcript-col {
     display: contents;
   }
+  .page-footer { grid-area: footer; }
 
   /* Summary (top) */
   .summary-main {
@@ -1259,12 +1263,8 @@ body {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
 
   /* Transcript (middle) */
-  .transcript-col {
-    grid-area: transcript;
-    border-right: none;
-    max-height: none;
-  }
   .transcript-scroll {
+    grid-area: transcript;
     padding: 0 var(--space-xl) var(--space-md);
   }
   .transcript-text {
