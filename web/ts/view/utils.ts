@@ -66,6 +66,74 @@ export function determineVerdict(ann: Annotation, factChecks: Record<string, Fac
     return ann.fact_check_query ? 'pending' : 'no-fc';
 }
 
+// djb2 string hash — short base36 signature used by render reconciliation to
+// detect content changes. Collisions are possible but rare enough to ignore:
+// the worst case is a stale paragraph shown for one render cycle.
+export function strHash(s: string): string {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    }
+    return (h >>> 0).toString(36);
+}
+
+// Reconciliation primitives shared by transcript.ts and marginalia.ts.
+//
+// A keyed item with a matching key + hash on an existing child is reused
+// in place — the element reference is carried through unchanged, which
+// preserves hover state, active transitions, and attached event listeners.
+// Keyless items are always rebuilt via build() (e.g. review findings).
+// build() is lazy: only called when no reusable existing element is found.
+export interface ReconcileItem {
+    key?: string;
+    hash?: string;
+    build: () => HTMLElement;
+}
+
+export function reconcileKeyed(
+    container: HTMLElement,
+    items: ReconcileItem[],
+    keyAttr: string,
+    hashAttr: string = 'hash',
+): void {
+    // Index existing children by their key data-attribute so we can look
+    // up potential reuse candidates in O(1) during the build pass.
+    const reusable = new Map<string, HTMLElement>();
+    for (const child of Array.from(container.children)) {
+        const el = child as HTMLElement;
+        const k = el.dataset[keyAttr];
+        if (k) {
+            reusable.set(k, el);
+        }
+    }
+
+    const newChildren: HTMLElement[] = items.map(item => {
+        if (item.key) {
+            const existing = reusable.get(item.key);
+            if (existing && existing.dataset[hashAttr] === item.hash) {
+                return existing;
+            }
+        }
+        return item.build();
+    });
+
+    // Minimal-mutation diff: only replace / append / remove where the
+    // reference at a given index actually differs from what was there.
+    const oldChildren = Array.from(container.children) as HTMLElement[];
+    const n = Math.max(oldChildren.length, newChildren.length);
+    for (let i = 0; i < n; i++) {
+        const oldCh = oldChildren[i] as HTMLElement | undefined;
+        const newCh = newChildren[i];
+        if (!oldCh) {
+            container.appendChild(newCh);
+        } else if (!newCh) {
+            container.removeChild(oldCh);
+        } else if (oldCh !== newCh) {
+            container.replaceChild(newCh, oldCh);
+        }
+    }
+}
+
 export function formatTokens(n: number): string {
     if (n >= 1_000_000) {
         return (n / 1_000_000).toFixed(1) + 'M';

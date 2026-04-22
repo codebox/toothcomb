@@ -28,7 +28,16 @@ export function buildJobStore(): JobStore {
     const {on, emit} = buildEmitter();
     let jobs: JobMeta[] = [],
         activeJobId: string | null = null,
-        activeJob: ActiveJob | null = null;
+        activeJob: ActiveJob | null = null,
+        selectedRef: string | null = null,
+        activeFindingRefs: string[] | null = null;
+
+    function arraysEqual(a: string[] | null, b: string[] | null): boolean {
+        if (a === b) return true;
+        if (!a || !b) return false;
+        if (a.length !== b.length) return false;
+        return a.every((v, i) => v === b[i]);
+    }
 
     function makeActiveJob(): ActiveJob {
         return {utterances: {}, analysis: {}, factChecks: {}, pendingMerges: {}, stats: [], review: null, status: 'init'};
@@ -37,8 +46,47 @@ export function buildJobStore(): JobStore {
     function selectJob(jobId: string): void {
         activeJobId = jobId;
         activeJob = makeActiveJob();
+        selectedRef = null;
+        activeFindingRefs = null;
         emit('navChanged');
         emit('changed');
+        emit('selectionChanged');
+    }
+
+    // ── Selection state (view state held centrally so it survives renders) ──
+    function getSelectedRef(): string | null {
+        return selectedRef;
+    }
+
+    function getActiveFindingRefs(): string[] | null {
+        return activeFindingRefs;
+    }
+
+    function setSelection(ref: string | null): void {
+        if (selectedRef === ref && activeFindingRefs === null) {
+            return;
+        }
+        selectedRef = ref;
+        activeFindingRefs = null;
+        emit('selectionChanged');
+    }
+
+    function setActiveFinding(refs: string[] | null): void {
+        if (arraysEqual(activeFindingRefs, refs) && selectedRef === null) {
+            return;
+        }
+        activeFindingRefs = refs;
+        selectedRef = null;
+        emit('selectionChanged');
+    }
+
+    function clearSelection(): void {
+        if (selectedRef === null && activeFindingRefs === null) {
+            return;
+        }
+        selectedRef = null;
+        activeFindingRefs = null;
+        emit('selectionChanged');
     }
 
     function getActiveJobId(): string | null {
@@ -224,6 +272,11 @@ export function buildJobStore(): JobStore {
         getJobSourceType,
         getJobStreamingMode,
         countStats,
+        getSelectedRef,
+        getActiveFindingRefs,
+        setSelection,
+        setActiveFinding,
+        clearSelection,
         handleJobCreated,
         handleJobStatus,
         handleJobDeleted,

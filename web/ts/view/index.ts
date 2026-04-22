@@ -8,10 +8,11 @@ import {buildMarginaliaView} from './marginalia';
 import {buildAnnotationView} from './annotations';
 import {buildModalView} from './modal';
 import {buildDeleteModal, buildAbortModal} from './confirm-modal';
-import {AppView} from '../types';
+import {AppView, JobStore} from '../types';
 
-export function buildView(): AppView {
+export function buildView(store: JobStore): AppView {
     const elTranscriptCol = document.getElementById('transcriptCol')!,
+        elMarginCol = document.getElementById('marginCol')!,
         modal = buildModalView(),
         deleteModal = buildDeleteModal(),
         abortModal = buildAbortModal();
@@ -29,7 +30,7 @@ export function buildView(): AppView {
         summary: buildSummaryView(),
         transcript: buildTranscriptView(),
         marginalia: buildMarginaliaView(),
-        annotations: buildAnnotationView(elTranscriptCol),
+        annotations: buildAnnotationView(elTranscriptCol, elMarginCol, store),
         modal,
         deleteModal,
         abortModal,

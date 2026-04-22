@@ -367,6 +367,11 @@ export interface JobStore {
     getJobSourceType(jobId: string): SourceType | undefined;
     getJobStreamingMode(jobId: string): StreamingMode | undefined;
     countStats(): StatCounts;
+    getSelectedRef(): string | null;
+    getActiveFindingRefs(): string[] | null;
+    setSelection(ref: string | null): void;
+    setActiveFinding(refs: string[] | null): void;
+    clearSelection(): void;
     handleJobCreated(data: JobCreatedEvent): void;
     handleJobStatus(data: JobStatusEvent): void;
     handleJobDeleted(data: JobDeletedEvent): void;

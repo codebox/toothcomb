@@ -1,7 +1,7 @@
 // ── Transcript View ──
 
 import {buildEmitter} from '../events';
-import {escHtml, escAttr, formatTime, tmpl, makeEl, determineVerdict} from './utils';
+import {escHtml, escAttr, formatTime, tmpl, makeEl, determineVerdict, strHash, reconcileKeyed, ReconcileItem} from './utils';
 import {TranscriptView, TranscriptData, AudioInfo, Annotation, FactCheck, AnalysisResult, Utterance} from '../types';
 
 export function buildTranscriptView(): TranscriptView {
@@ -87,21 +87,31 @@ export function buildTranscriptView(): TranscriptView {
         }, 'no-fc');
     }
 
-    function buildTranscriptHtml(utterances: Utterance[], analysis: Record<string, AnalysisResult>, factChecks: Record<string, FactCheck>, isRunning: boolean): string {
+    interface Segment {
+        key?: string;   // stable id (utterance_id) for reusable paragraphs
+        hash?: string;  // content signature; same hash on same key -> reuse
+        html: string;   // outer HTML for the segment
+    }
+
+    function buildSegments(utterances: Utterance[], analysis: Record<string, AnalysisResult>, factChecks: Record<string, FactCheck>, isRunning: boolean): Segment[] {
         annotationCounter = 0;
-        let html = '',
-            rawTexts: string[] = [],
+        const segments: Segment[] = [];
+        let rawTexts: string[] = [],
             lastRemainder = '';
+
+        const flushRaw = () => {
+            if (rawTexts.length > 0) {
+                segments.push({html: `<p class="transcript-raw">${escHtml(rawTexts.join(' '))}</p>`});
+                rawTexts = [];
+            }
+        };
 
         utterances.forEach(utt => {
             const anal = analysis[utt.utterance_id];
 
             if (anal && anal.parts && anal.parts.length > 0 && !anal.failed) {
-                if (rawTexts.length > 0) {
-                    html += `<p class="transcript-raw">${escHtml(rawTexts.join(' '))}</p>`;
-                    rawTexts = [];
-                }
-                let partHtml = '';
+                flushRaw();
+                let inner = '';
                 anal.parts.forEach(part => {
                     let text = escHtml(part.corrected_text);
                     if (part.annotations && part.annotations.length > 0) {
@@ -122,16 +132,19 @@ export function buildTranscriptView(): TranscriptView {
                             text += `<sup class="anno-ref" data-ref="${ann._refNum}" data-type="${escAttr(annType)}">${ann._refNum}</sup>`;
                         });
                     }
-                    partHtml += text + ' ';
+                    inner += text + ' ';
                 });
-                html += `<p data-utterance-id="${escAttr(utt.utterance_id)}">${partHtml.trim()}</p>`;
+                inner = inner.trim();
+                const hash = strHash(inner);
+                segments.push({
+                    key: utt.utterance_id,
+                    hash,
+                    html: `<p data-utterance-id="${escAttr(utt.utterance_id)}" data-hash="${hash}">${inner}</p>`,
+                });
                 lastRemainder = anal.remainder || '';
             } else if (anal && anal.failed) {
-                if (rawTexts.length > 0) {
-                    html += `<p class="transcript-raw">${escHtml(rawTexts.join(' '))}</p>`;
-                    rawTexts = [];
-                }
-                html += `<div class="analysis-error">Analysis failed for this utterance</div>`;
+                flushRaw();
+                segments.push({html: `<div class="analysis-error">Analysis failed for this utterance</div>`});
                 lastRemainder = '';
             } else {
                 if (lastRemainder && rawTexts.length === 0) {
@@ -142,14 +155,17 @@ export function buildTranscriptView(): TranscriptView {
         });
 
         if (rawTexts.length > 0) {
-            html += `<p class="transcript-raw">${escHtml(rawTexts.join(' '))}`;
-            if (isRunning) {
-                html += `<span class="live-cursor"></span>`;
-            }
-            html += `</p>`;
+            const cursor = isRunning ? `<span class="live-cursor"></span>` : '';
+            segments.push({html: `<p class="transcript-raw">${escHtml(rawTexts.join(' '))}${cursor}</p>`});
         }
 
-        return html;
+        return segments;
+    }
+
+    function buildElement(html: string): HTMLElement {
+        const tmp = document.createElement('template');
+        tmp.innerHTML = html;
+        return tmp.content.firstElementChild as HTMLElement;
     }
 
     function render(data: TranscriptData | null): void {
@@ -167,25 +183,41 @@ export function buildTranscriptView(): TranscriptView {
             isRunning = status === 'ingesting' || status === 'analysing' || status === 'reviewing',
             wasAtBottom = isRunning && !userScrolledUp;
 
-        elCol.innerHTML = '';
+        // Rebuild the status bar each render (small, no hover concerns).
+        const existingBar = elCol.querySelector(':scope > .status-bar');
+        if (existingBar) existingBar.remove();
+        const existingEmpty = elCol.querySelector(':scope > .empty-state');
+        if (existingEmpty) existingEmpty.remove();
 
         const elBar = renderStatusBar(status, audio, jobId, isStreaming, rateLimited);
         if (elBar) {
-            elCol.appendChild(elBar);
+            elCol.insertBefore(elBar, elCol.firstChild);
         }
 
-        const transcriptHtml = buildTranscriptHtml(utterances, analysis, factChecks || {}, isRunning);
+        let elDiv = elCol.querySelector(':scope > .transcript-text') as HTMLElement | null;
 
-        if (transcriptHtml) {
-            const elDiv = makeEl('div', 'transcript-text');
-            elDiv.innerHTML = transcriptHtml;
-            elCol.appendChild(elDiv);
-        } else if (utterances.length === 0) {
-            if (isRunning) {
-                elCol.appendChild(makeEl('div', 'empty-state', 'Waiting for data...'));
-            } else if (status !== 'init') {
-                elCol.appendChild(makeEl('div', 'empty-state', 'No transcript data'));
+        if (utterances.length === 0) {
+            if (elDiv) {
+                elDiv.remove();
+                elDiv = null;
             }
+            const msg = isRunning ? 'Waiting for data...'
+                : (status !== 'init' ? 'No transcript data' : null);
+            if (msg) {
+                elCol.appendChild(makeEl('div', 'empty-state', msg));
+            }
+        } else {
+            if (!elDiv) {
+                elDiv = makeEl('div', 'transcript-text');
+                elCol.appendChild(elDiv);
+            }
+            const segments = buildSegments(utterances, analysis, factChecks || {}, isRunning);
+            const items: ReconcileItem[] = segments.map(seg => ({
+                key: seg.key,
+                hash: seg.hash,
+                build: () => buildElement(seg.html),
+            }));
+            reconcileKeyed(elDiv, items, 'utteranceId');
         }
 
         if (wasAtBottom) {

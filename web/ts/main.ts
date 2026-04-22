@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const demo = document.querySelector('meta[name="demo"]')?.getAttribute('content') === 'true',
         service = buildService(),
-        {nav, summary, transcript, marginalia, annotations, modal, deleteModal, abortModal} = buildView(),
         store = buildJobStore(),
+        {nav, summary, transcript, marginalia, annotations, modal, deleteModal, abortModal} = buildView(store),
         audio = buildAudioPipeline(service, {
             onRender: () => render(),
             onMicrophoneRequested: () => transcript.showMicrophonePrompt(),

@@ -1,7 +1,7 @@
 // ── Marginalia View ──
 
 import {buildEmitter} from '../events';
-import {tmpl, makeEl, determineVerdict} from './utils';
+import {tmpl, makeEl, determineVerdict, strHash, reconcileKeyed, ReconcileItem} from './utils';
 import {MarginaliaView, MarginaliaData, Annotation, FactCheck, ReviewFinding} from '../types';
 
 export function buildMarginaliaView(): MarginaliaView {
@@ -23,6 +23,23 @@ export function buildMarginaliaView(): MarginaliaView {
         });
     }
 
+    function noteSignature(ann: Annotation, refNum: number, factChecks: Record<string, FactCheck>): string {
+        const fc = factChecks[ann.annotation_id];
+        return JSON.stringify({
+            ref: refNum,
+            type: ann.type || 'CLAIM',
+            notes: ann.notes,
+            verdict: determineVerdict(ann, factChecks),
+            fc: fc ? {
+                v: fc.verdict,
+                n: fc.note,
+                c: (fc.citations || []).map(c => [c.url, c.title]),
+            } : null,
+            pending: !fc && !!ann.fact_check_query,
+            demo: demoMode,
+        });
+    }
+
     function buildMarginNote(ann: Annotation, refNum: number, factChecks: Record<string, FactCheck>): HTMLElement {
         const elNote = tmpl('tmpl-margin-note'),
             type = ann.type || 'CLAIM',
@@ -31,6 +48,7 @@ export function buildMarginaliaView(): MarginaliaView {
         elNote.id = 'note-' + refNum;
         elNote.dataset.type = type;
         elNote.dataset.ref = String(refNum);
+        elNote.dataset.annotationId = ann.annotation_id;
         elNote.querySelector('.margin-ref')!.textContent = String(refNum);
 
         const ledClass = determineVerdict(ann, factChecks);
@@ -107,14 +125,16 @@ export function buildMarginaliaView(): MarginaliaView {
         if (!elCol) {
             return;
         }
-        elCol.innerHTML = '';
         if (!data) {
+            elCol.innerHTML = '';
             userScrolledUp = false;
             return;
         }
 
         const {utterances, analysis, factChecks, review} = data;
         demoMode = data.demo;
+
+        const items: ReconcileItem[] = [];
         let refNum = 0;
 
         utterances.forEach(utt => {
@@ -129,17 +149,29 @@ export function buildMarginaliaView(): MarginaliaView {
                 }
                 part.annotations.forEach(ann => {
                     refNum++;
-                    elCol.appendChild(buildMarginNote(ann, refNum, factChecks));
+                    const thisRef = refNum;
+                    const hash = strHash(noteSignature(ann, thisRef, factChecks));
+                    items.push({
+                        key: ann.annotation_id,
+                        hash,
+                        build: () => {
+                            const fresh = buildMarginNote(ann, thisRef, factChecks);
+                            fresh.dataset.hash = hash;
+                            return fresh;
+                        },
+                    });
                 });
             });
         });
 
         if (review && review.findings && review.findings.length > 0) {
-            elCol.appendChild(makeEl('div', 'review-findings-label', 'Review Findings'));
+            items.push({build: () => makeEl('div', 'review-findings-label', 'Review Findings')});
             review.findings.forEach(finding => {
-                elCol.appendChild(buildFindingCard(finding));
+                items.push({build: () => buildFindingCard(finding)});
             });
         }
+
+        reconcileKeyed(elCol, items, 'annotationId');
 
         const isRunning = data.status === 'ingesting' || data.status === 'analysing' || data.status === 'reviewing',
             hasSelection = elCol.querySelector('.margin-note.highlighted, .review-finding.active') !== null;
