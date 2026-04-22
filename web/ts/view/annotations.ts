@@ -57,7 +57,7 @@ export function buildAnnotationView(elTranscriptCol: HTMLElement): AnnotationVie
                 elParagraph.after(elInline);
                 sel.elInline = elInline;
                 if (scroll) {
-                    elInline.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                    elParagraph.scrollIntoView({behavior: 'smooth', block: 'start'});
                 }
             }
         } else {
