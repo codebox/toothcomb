@@ -39,8 +39,8 @@ class TranscriptionWorker:
         self._running = False
         self._threads: list[threading.Thread] = []
         self._seq_counters: dict[JobId, int] = {}
-        self._pending_emissions = threading.Semaphore(0)
-        self._pending_count = 0
+        self._pending_counts: dict[JobId, int] = {}
+        self._pending_sems: dict[JobId, threading.Semaphore] = {}
         self._pending_lock = threading.Lock()
 
     def submit(self, job_id: JobId, audio_data: bytes, chunk_offset_seconds: float = 0.0,
@@ -66,17 +66,25 @@ class TranscriptionWorker:
             self._seq_counters[job_id] += 1
         return self._seq_counters[job_id]
 
-    def wait_for_drain(self) -> None:
+    def wait_for_drain(self, job_id: JobId) -> None:
         """Block until all currently queued items have been processed
-        and all delayed (realtime-paced) emissions have completed."""
+        and all delayed (realtime-paced) emissions for this job have completed.
+
+        The pending counter and semaphore are per-job so that concurrent jobs
+        don't satisfy each other's drains - otherwise job A could advance past
+        ingesting while one of its own Timer-scheduled emissions is still
+        outstanding, leaving the late utterance stranded in 'buffered' state.
+        """
         done = threading.Event()
         self._queue.put(("__drain__", done))
         done.wait()
-        # Now wait for any outstanding Timer-scheduled emissions to finish
         with self._pending_lock:
-            remaining = self._pending_count
+            remaining = self._pending_counts.get(job_id, 0)
+            sem = self._pending_sems.get(job_id)
+        if not sem:
+            return
         for _ in range(remaining):
-            self._pending_emissions.acquire()
+            sem.acquire()
 
     def start(self) -> None:
         self._running = True
@@ -146,21 +154,25 @@ class TranscriptionWorker:
         if delay > 0:
             log.info("[%s] Realtime pacing: emitting in %.1fs (offset %.1fs)", job_id, delay, offset_seconds)
             with self._pending_lock:
-                self._pending_count += 1
-            timer = threading.Timer(delay, self._delayed_emit, args=(utterance,))
+                if job_id not in self._pending_sems:
+                    self._pending_sems[job_id] = threading.Semaphore(0)
+                    self._pending_counts[job_id] = 0
+                self._pending_counts[job_id] += 1
+            timer = threading.Timer(delay, self._delayed_emit, args=(job_id, utterance))
             timer.daemon = True
             timer.start()
         else:
             self._updates.utterance_transcribed(utterance)
 
-    def _delayed_emit(self, utterance: Utterance) -> None:
+    def _delayed_emit(self, job_id: JobId, utterance: Utterance) -> None:
         """Emit a delayed utterance and signal that it has completed."""
         try:
             self._updates.utterance_transcribed(utterance)
         finally:
             with self._pending_lock:
-                self._pending_count -= 1
-            self._pending_emissions.release()
+                self._pending_counts[job_id] -= 1
+                sem = self._pending_sems[job_id]
+            sem.release()
 
     def _compute_delay(self, job_id: JobId, offset_seconds: float) -> float:
         """Return seconds to wait before emitting, or 0 if no delay needed."""

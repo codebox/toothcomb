@@ -96,7 +96,7 @@ class JobRunner:
             source.start()
             if transcription_worker:
                 log.info("[%s] Waiting for transcription queue to drain", job_id)
-                transcription_worker.wait_for_drain()
+                transcription_worker.wait_for_drain(job_id)
             if not database.get_job(job_id):
                 log.info("[%s] Job deleted during source processing", job_id)
                 return
