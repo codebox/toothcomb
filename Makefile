@@ -1,6 +1,7 @@
-# Load .env (API keys etc.) into the environment for local runs
--include .env
-export
+# Load .env only for targets that actually need the secrets (e.g. `run`),
+# so `make test` doesn't pull API keys into the test environment.
+# Sources .env if present, no-op otherwise.
+LOAD_ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 REQUIRED_PYTHON_MINOR := 10
 PYTHON_VERSION := $(shell python3 -c 'import sys; print(sys.version_info.minor)')
@@ -24,7 +25,7 @@ build: node_modules
 	npm run build
 
 run: .venv build
-	PYTHONPATH=src .venv/bin/python src/main.py
+	$(LOAD_ENV) PYTHONPATH=src .venv/bin/python src/main.py
 
 test: .venv
 	PYTHONPATH=src .venv/bin/python -m pytest tests/ -v
