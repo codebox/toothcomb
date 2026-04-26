@@ -71,7 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     service.on('factCheckReset', data => store.handleFactCheckReset(data));
     service.on('jobStats', data => store.handleJobStats(data));
     service.on('transcriptReview', data => store.handleReview(data));
-    service.on('replayComplete', data => store.handleReplayComplete(data));
+    service.on('replayComplete', data => {
+        store.handleReplayComplete(data);
+        annotations.scrollToHashTarget();
+    });
     service.on('rateLimited', (data: any) => {
         if (data.job_id === store.getActiveJobId()) {
             showRateLimitNotice(data.retry_in_seconds);
@@ -158,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Main render ──
     function render() {
         renderSummary();
+        annotations.prepareForRender();
         renderTranscript();
         renderMarginalia();
         annotations.setup();

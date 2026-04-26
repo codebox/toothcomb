@@ -129,6 +129,15 @@ export function buildAnnotationView(
 
     // ── Actions (translate user intent into store mutations + side effects) ──
 
+    function scrollToSelected(entry: MarkEntry): void {
+        if (isMobile()) {
+            const elParagraph = entry.elMark.closest('p');
+            if (elParagraph) elParagraph.scrollIntoView({behavior: 'smooth', block: 'start'});
+        } else if (entry.elNotes.length > 0) {
+            entry.elNotes[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    }
+
     function onRefClicked(ref: string): void {
         if (store.getSelectedRef() === ref) {
             updateHash(null, true);
@@ -139,12 +148,7 @@ export function buildAnnotationView(
         store.setSelection(ref);
         const entry = refToMark[ref];
         if (!entry) return;
-        if (isMobile()) {
-            const elParagraph = entry.elMark.closest('p');
-            if (elParagraph) elParagraph.scrollIntoView({behavior: 'smooth', block: 'start'});
-        } else if (entry.elNotes.length > 0) {
-            entry.elNotes[0].scrollIntoView({behavior: 'smooth', block: 'start'});
-        }
+        scrollToSelected(entry);
     }
 
     function onFindingClicked(elCard: HTMLElement): void {
@@ -258,6 +262,17 @@ export function buildAnnotationView(
         refToMark[ref].elMark.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
 
+    // Mobile inline notes are inserted as a sibling of the selected paragraph
+    // inside `.transcript-text`, but reconcileKeyed can't see unkeyed children
+    // and shifts subsequent paragraphs out of position when it reaches one.
+    // Detach before each render; applySelection re-creates after setup().
+    function prepareForRender(): void {
+        if (elInline) {
+            elInline.remove();
+            elInline = null;
+        }
+    }
+
     function setup(): void {
         // Rebuild ref/annId indices from the current DOM. These are the only
         // per-render work this module does now — event listeners are attached
@@ -276,11 +291,13 @@ export function buildAnnotationView(
             allAnnIds.forEach(id => { annIdToMark[id] = elMark; });
         });
 
-        // On first setup after a navigation, restore selection from URL hash.
+        // First render where the URL-hash target exists in the DOM:
+        // restore the selection so the highlight classes are applied.
+        // Scrolling is deferred until replayComplete (see scrollToHashTarget),
+        // because layout shifts repeatedly while events replay.
         const hashRef = location.hash.slice(1).split('/')[1];
         if (hashRef && refToMark[hashRef] && store.getSelectedRef() !== hashRef) {
             store.setSelection(hashRef);  // triggers applySelection via event
-            refToMark[hashRef].elMark.scrollIntoView({behavior: 'instant', block: 'center'});
             return;
         }
 
@@ -289,5 +306,17 @@ export function buildAnnotationView(
         applySelection();
     }
 
-    return {setup, selectRef};
+    function scrollToHashTarget(): void {
+        const hashRef = location.hash.slice(1).split('/')[1];
+        if (!hashRef) return;
+        const entry = refToMark[hashRef];
+        if (!entry) return;
+        scrollToSelected(entry);
+        if (!isMobile()) {
+            const elParagraph = entry.elMark.closest('p');
+            if (elParagraph) elParagraph.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    }
+
+    return {setup, selectRef, prepareForRender, scrollToHashTarget};
 }

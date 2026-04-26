@@ -313,6 +313,8 @@ export interface MarginaliaView {
 export interface AnnotationView {
     setup(): void;
     selectRef(ref: string | null): void;
+    prepareForRender(): void;
+    scrollToHashTarget(): void;
 }
 
 export interface ModalView {
