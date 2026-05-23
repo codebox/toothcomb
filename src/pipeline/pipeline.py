@@ -132,6 +132,9 @@ class Pipeline:
 
     @staticmethod
     def _build_transcriber(config: Config) -> Transcriber | None:
+        if config.get("demo", False):
+            log.info("Demo mode: skipping whisper model load")
+            return None
         backend = config.get("whisper.backend") or "mlx"
         try:
             if backend == "faster-whisper":
