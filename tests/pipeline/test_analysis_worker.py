@@ -1,4 +1,5 @@
 import json
+from domain.llm_refusal_error import LLMRefusalError
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -224,6 +225,19 @@ class TestProcess:
         updates.utterance_analysed.assert_called_once()
         analysed = updates.utterance_analysed.call_args[0][2]
         assert analysed.failed is True
+
+    def test_analyser_refusal_sets_failure_reason(self, db, updates):
+        _create_running_job(db)
+        utt = _create_pending_utterance(db)
+        job = db.get_job(JobId("job-1"))
+        analyser = _make_analyser(side_effect=LLMRefusalError("claude-opus-5-5", "cyber"))
+        worker = _make_worker(analyser, db, updates)
+
+        worker._process(job, utt)
+
+        analysed = updates.utterance_analysed.call_args[0][2]
+        assert analysed.failed is True
+        assert analysed.failure_reason == "Claude declined to answer (refusal category: cyber)"
 
     def test_analyser_exception_still_checks_complete(self, db, updates):
         _create_running_job(db)

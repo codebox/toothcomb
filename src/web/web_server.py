@@ -242,7 +242,7 @@ class WebServer:
 
     def _replay_analysis(self, job_id: JobId, utt: Utterance, to: str) -> None:
         if utt.analysis_status == AnalysisStatus.FAILED:
-            self._emitter.analysis_failed(job_id, utt.id, to=to)
+            self._emitter.analysis_failed(job_id, utt.id, utt.analysis_failure_reason, to=to)
             return
 
         parts = self._database.get_analysed_parts(utt.id)

@@ -144,7 +144,8 @@ export function buildTranscriptView(): TranscriptView {
                 lastRemainder = anal.remainder || '';
             } else if (anal && anal.failed) {
                 flushRaw();
-                segments.push({html: `<div class="analysis-error">Analysis failed for this utterance</div>`});
+                const reason = anal.failure_reason ? `: ${escHtml(anal.failure_reason)}` : '';
+                segments.push({html: `<div class="analysis-error">Analysis failed for this utterance${reason}</div>`});
                 lastRemainder = '';
             } else {
                 if (lastRemainder && rawTexts.length === 0) {

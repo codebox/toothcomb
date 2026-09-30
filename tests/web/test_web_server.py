@@ -1,3 +1,4 @@
+import dataclasses
 import json
 from unittest.mock import MagicMock, patch, call
 
@@ -287,12 +288,13 @@ class TestReplayAnalysis:
 
     def test_failed_analysis_emits_failure(self):
         server, db = _make_server()
-        utt = _utterance("u1", analysis_status=AnalysisStatus.FAILED)
+        utt = dataclasses.replace(_utterance("u1", analysis_status=AnalysisStatus.FAILED),
+                                  analysis_failure_reason="Claude declined to answer")
 
         server._replay_analysis(JobId("j1"), utt, to="sid")
 
         server._emitter.analysis_failed.assert_called_once_with(
-            JobId("j1"), UtteranceId("u1"), to="sid")
+            JobId("j1"), UtteranceId("u1"), "Claude declined to answer", to="sid")
         # Should not query for analysed parts
         db.get_analysed_parts.assert_not_called()
 

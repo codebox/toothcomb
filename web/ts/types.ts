@@ -34,6 +34,7 @@ export interface AnalysisResult {
     parts?: AnalysisPart[];
     remainder?: string;
     failed?: boolean;
+    failure_reason?: string;
 }
 
 export interface Utterance {

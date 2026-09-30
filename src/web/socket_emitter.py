@@ -40,8 +40,8 @@ class SocketEmitter:
         data["job_id"] = job_id
         self._sio.emit("analysis", data, **kwargs)
 
-    def analysis_failed(self, job_id: JobId, utterance_id: UtteranceId, **kwargs) -> None:
-        failed = AnalysedText(utterance_id=utterance_id, text="", failed=True)
+    def analysis_failed(self, job_id: JobId, utterance_id: UtteranceId, reason: str = "", **kwargs) -> None:
+        failed = AnalysedText(utterance_id=utterance_id, text="", failed=True, failure_reason=reason)
         self.analysis(job_id, failed, **kwargs)
 
     def fact_check(

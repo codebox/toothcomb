@@ -71,7 +71,7 @@ llm:
     # api_key:
 
     # Model used for analysing utterances (extracting claims, annotations, tactics)
-    # Options: claude-opus-5-5, claude-sonnet-5-5, claude-opus-4-7, claude-sonnet-4-6
+    # Options: claude-opus-5-5, claude-sonnet-5-5, claude-haiku-4-5 (older: claude-opus-4-7, claude-sonnet-4-6)
     analysis_model: claude-opus-5-5
     # Model used for fact-checking individual claims via web search
     fact_check_model: claude-sonnet-5-5

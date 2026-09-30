@@ -83,8 +83,8 @@ class Database(ABC):
         """Mark an utterance's analysis as complete and store remainder."""
 
     @abstractmethod
-    def fail_utterance_analysis(self, utterance_id: UtteranceId) -> None:
-        """Mark an utterance's analysis as failed."""
+    def fail_utterance_analysis(self, utterance_id: UtteranceId, reason: str = "") -> None:
+        """Mark an utterance's analysis as failed, with a reason to show the user (may be empty)."""
 
     @abstractmethod
     def get_utterance(self, utterance_id: UtteranceId) -> Optional[Utterance]:

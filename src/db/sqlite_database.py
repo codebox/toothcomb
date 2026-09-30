@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS utterances (
     offset_seconds      REAL NOT NULL DEFAULT 0,
     analysis_status     TEXT NOT NULL DEFAULT 'pending',
     analysis_remainder  TEXT NOT NULL DEFAULT '',
+    analysis_failure_reason TEXT NOT NULL DEFAULT '',
     created_at          TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -120,7 +121,13 @@ class SQLiteDatabase(Database):
         return conn
 
     def _init_schema(self) -> None:
-        self._get_conn().executescript(_SCHEMA)
+        conn = self._get_conn()
+        conn.executescript(_SCHEMA)
+        # Databases created before analysis_failure_reason existed
+        columns = {r["name"] for r in conn.execute("PRAGMA table_info(utterances)")}
+        if "analysis_failure_reason" not in columns:
+            conn.execute("ALTER TABLE utterances ADD COLUMN analysis_failure_reason TEXT NOT NULL DEFAULT ''")
+            conn.commit()
 
     # -- Row → Domain mapping --
 
@@ -146,6 +153,7 @@ class SQLiteDatabase(Database):
             offset_seconds=row["offset_seconds"],
             analysis_status=AnalysisStatus(row["analysis_status"]),
             analysis_remainder=row["analysis_remainder"],
+            analysis_failure_reason=row["analysis_failure_reason"],
         )
 
     @staticmethod
@@ -366,11 +374,11 @@ class SQLiteDatabase(Database):
         )
         conn.commit()
 
-    def fail_utterance_analysis(self, utterance_id: UtteranceId) -> None:
+    def fail_utterance_analysis(self, utterance_id: UtteranceId, reason: str = "") -> None:
         conn = self._get_conn()
         conn.execute(
-            "UPDATE utterances SET analysis_status = 'failed' WHERE id = ?",
-            (utterance_id,),
+            "UPDATE utterances SET analysis_status = 'failed', analysis_failure_reason = ? WHERE id = ?",
+            (reason, utterance_id),
         )
         conn.commit()
 

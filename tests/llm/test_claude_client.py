@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import anthropic
+from domain.llm_refusal_error import LLMRefusalError
 from domain.prompt import Prompt
 from domain.types import ModelName
 from llm.claude_client import ClaudeClient
@@ -82,6 +83,28 @@ class TestResponseParsing:
 
         with pytest.raises(ValueError, match="No text block"):
             client.send(Prompt("sys", "user"))
+
+    def test_refusal_raises_even_with_partial_text(self):
+        client, mock_api = _make_client()
+        response = _fake_response(content=[_FakeTextBlock(text="partial answer")])
+        response.stop_reason = "refusal"
+        response.stop_details = MagicMock(category="cyber")
+        mock_api.messages.create.return_value = response
+
+        with pytest.raises(LLMRefusalError) as exc_info:
+            client.send(Prompt("sys", "user"))
+        assert exc_info.value.category == "cyber"
+
+    def test_refusal_without_category(self):
+        client, mock_api = _make_client()
+        response = _fake_response(content=[])
+        response.stop_reason = "refusal"
+        response.stop_details = None
+        mock_api.messages.create.return_value = response
+
+        with pytest.raises(LLMRefusalError) as exc_info:
+            client.send(Prompt("sys", "user"))
+        assert exc_info.value.category is None
 
     def test_usage_fields_mapped(self):
         client, mock_api = _make_client()

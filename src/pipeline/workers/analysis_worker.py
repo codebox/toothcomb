@@ -4,6 +4,7 @@ from config import Config
 from db.database import Database
 from domain.analysed_text import AnalysedText
 from domain.job import Job
+from domain.llm_refusal_error import LLMRefusalError
 from domain.job_config import JobConfig, PromptContext
 from domain.transcript import Utterance, UtteranceWithContext
 from domain.types import JobStatus, UtteranceId
@@ -82,6 +83,10 @@ class AnalysisWorker(PollingWorker):
                 self._database.reset_utterance_to_pending(utterance_id)
                 self._updates.emit_rate_limited(job.id, e.retry_in_seconds)
                 raise
+            except LLMRefusalError as e:
+                log.warning("[%s] Analysis refused for seq=%d: %s", job.id, seq, e)
+                analysed_text = AnalysedText(utterance_id=utterance_id, text=text, failed=True,
+                                             failure_reason=e.reason)
             except Exception:
                 log.exception("[%s] Analysis failed for seq=%d", job.id, seq)
                 analysed_text = AnalysedText(utterance_id=utterance_id, text=text, failed=True)

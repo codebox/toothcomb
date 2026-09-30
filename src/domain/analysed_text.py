@@ -73,6 +73,7 @@ class AnalysedText:
     analysed_parts: tuple[AnalysedPart, ...] = ()
     remainder: str = ""
     failed: bool = False
+    failure_reason: str = ""
     usage: object = None  # Optional LLMUsage, kept as object to avoid circular import
 
     def to_dict(self) -> dict:
@@ -81,4 +82,5 @@ class AnalysedText:
             "parts": [p.to_dict() for p in self.analysed_parts],
             "remainder": self.remainder,
             "failed": self.failed,
+            "failure_reason": self.failure_reason,
         }

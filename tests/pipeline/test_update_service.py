@@ -171,6 +171,18 @@ class TestUtteranceAnalysed:
         emitter.analysis_failed.assert_called_once()
         emitter.analysis.assert_not_called()
 
+    def test_failed_passes_reason_to_db_and_emitter(self, db, emitter, svc):
+        self._setup(db)
+        analysis = AnalysedText(
+            utterance_id=UtteranceId("u1"), text="t", failed=True,
+            failure_reason="Claude declined to answer",
+        )
+        svc.utterance_analysed(JobId("job-1"), UtteranceId("u1"), analysis)
+
+        assert db.get_utterance(UtteranceId("u1")).analysis_failure_reason == "Claude declined to answer"
+        emitter.analysis_failed.assert_called_once_with(
+            JobId("job-1"), UtteranceId("u1"), "Claude declined to answer", room=JobId("job-1"))
+
     def test_records_usage(self, db, emitter, svc):
         self._setup(db)
         usage = LLMUsage(model=ModelName("m"), input_tokens=100)

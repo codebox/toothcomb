@@ -145,6 +145,12 @@ class TestAnalysisFailed:
         assert payload["utterance_id"] == "u1"
         assert payload["failed"] is True
 
+    def test_includes_failure_reason(self):
+        emitter, sio = _emitter()
+        emitter.analysis_failed(JobId("j1"), UtteranceId("u1"), "Claude declined to answer")
+
+        assert sio.emit.call_args[0][1]["failure_reason"] == "Claude declined to answer"
+
     def test_event_name_is_analysis(self):
         emitter, sio = _emitter()
         emitter.analysis_failed(JobId("j1"), UtteranceId("u1"))

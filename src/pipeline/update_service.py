@@ -57,9 +57,9 @@ class UpdateService:
         self._record_usage(job_id, analysed_text.usage)
 
         if analysed_text.failed:
-            self._db.fail_utterance_analysis(utterance_id)
+            self._db.fail_utterance_analysis(utterance_id, analysed_text.failure_reason)
             log.info("[%s] analysis failed: %s", job_id, utterance_id)
-            self._emitter.analysis_failed(job_id, utterance_id, room=job_id)
+            self._emitter.analysis_failed(job_id, utterance_id, analysed_text.failure_reason, room=job_id)
             return
 
         self._db.complete_utterance_analysis(utterance_id, analysed_text.remainder)

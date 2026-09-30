@@ -4,6 +4,7 @@ from typing import Optional
 import anthropic
 
 from config import Config
+from domain.llm_refusal_error import LLMRefusalError
 from domain.llm_usage import LLMResponse, LLMUsage, Citation
 from domain.prompt import Prompt
 from domain.types import ModelName
@@ -70,6 +71,12 @@ class ClaudeClient:
         # Clear any existing rate-limit backoff on success
         if self._rate_limit_tracker:
             self._rate_limit_tracker.clear_throttle(self._model)
+
+        # Newer models' safety classifiers can decline a request mid-answer
+        # (HTTP 200, stop_reason "refusal"); any text before it is not an answer.
+        if getattr(response, "stop_reason", None) == "refusal":
+            details = getattr(response, "stop_details", None)
+            raise LLMRefusalError(self._model, getattr(details, "category", None))
 
         # When tools are used, the response contains multiple content blocks.
         # Extract the last text block and any citations.

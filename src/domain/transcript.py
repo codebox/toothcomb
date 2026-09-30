@@ -17,6 +17,7 @@ class Utterance:
     offset_seconds: float = 0.0
     analysis_status: AnalysisStatus = AnalysisStatus.PENDING
     analysis_remainder: str = ""
+    analysis_failure_reason: str = ""
 
     def to_dict(self) -> dict:
         return {

@@ -335,6 +335,34 @@ def test_complete_and_fail_utterance_analysis(db):
 
     u2 = db.get_utterance(UtteranceId("u2"))
     assert u2.analysis_status == AnalysisStatus.FAILED
+    assert u2.analysis_failure_reason == ""
+
+
+def test_fail_utterance_analysis_stores_reason(db):
+    db.create_job(_job())
+    db.create_utterance(_utterance("u1", seq=1))
+
+    db.fail_utterance_analysis(UtteranceId("u1"), "Claude declined to answer")
+
+    assert db.get_utterance(UtteranceId("u1")).analysis_failure_reason == "Claude declined to answer"
+
+
+def test_adds_failure_reason_column_to_existing_database(tmp_path):
+    import sqlite3
+    path = str(tmp_path / "old.db")
+    conn = sqlite3.connect(path)
+    conn.execute("""CREATE TABLE utterances (
+        id TEXT PRIMARY KEY, job_id TEXT NOT NULL, seq INTEGER NOT NULL,
+        speaker TEXT NOT NULL DEFAULT '', text TEXT NOT NULL DEFAULT '',
+        offset_seconds REAL NOT NULL DEFAULT 0, analysis_status TEXT NOT NULL DEFAULT 'pending',
+        analysis_remainder TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (datetime('now')))""")
+    conn.execute("INSERT INTO utterances (id, job_id, seq) VALUES ('u1', 'j1', 1)")
+    conn.commit()
+    conn.close()
+
+    db = SQLiteDatabase(path)
+
+    assert db.get_utterance(UtteranceId("u1")).analysis_failure_reason == ""
 
 
 def test_get_utterance_context(db):
