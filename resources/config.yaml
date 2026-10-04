@@ -71,12 +71,12 @@ llm:
     # api_key:
 
     # Model used for analysing utterances (extracting claims, annotations, tactics)
-    # Options: claude-opus-4-7, claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5
-    analysis_model: claude-opus-4-7
+    # Options: claude-opus-5-5, claude-sonnet-5-5, claude-opus-4-7, claude-sonnet-4-6
+    analysis_model: claude-opus-5-5
     # Model used for fact-checking individual claims via web search
-    fact_check_model: claude-sonnet-4-6
+    fact_check_model: claude-sonnet-5-5
     # Model used for the final whole-transcript review
-    review_model: claude-opus-4-7
+    review_model: claude-opus-5-5
 
     # Anthropic server-side web search tool version
     web_search_tool: web_search_20260209
