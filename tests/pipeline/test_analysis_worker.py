@@ -1,4 +1,5 @@
 import json
+from domain.claude_code_error import ClaudeCodeError
 from domain.llm_refusal_error import LLMRefusalError
 from unittest.mock import MagicMock, patch
 
@@ -225,6 +226,19 @@ class TestProcess:
         updates.utterance_analysed.assert_called_once()
         analysed = updates.utterance_analysed.call_args[0][2]
         assert analysed.failed is True
+
+    def test_claude_code_error_sets_failure_reason(self, db, updates):
+        _create_running_job(db)
+        utt = _create_pending_utterance(db)
+        job = db.get_job(JobId("job-1"))
+        analyser = _make_analyser(side_effect=ClaudeCodeError("Claude Code is not logged in"))
+        worker = _make_worker(analyser, db, updates)
+
+        worker._process(job, utt)
+
+        analysed = updates.utterance_analysed.call_args[0][2]
+        assert analysed.failed is True
+        assert analysed.failure_reason == "Claude Code is not logged in"
 
     def test_analyser_refusal_sets_failure_reason(self, db, updates):
         _create_running_job(db)

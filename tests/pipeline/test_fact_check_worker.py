@@ -4,6 +4,7 @@ import pytest
 
 from db.sqlite_database import SQLiteDatabase
 from domain.analysed_text import Annotation, AnnotationType
+from domain.claude_code_error import ClaudeCodeError
 from domain.fact_check_result import FactCheckResult, Verdict
 from domain.job import Job
 from domain.llm_refusal_error import LLMRefusalError
@@ -220,6 +221,17 @@ class TestProcessException:
         updates.fact_check_failed.assert_called_once()
         note = updates.fact_check_failed.call_args[0][2]
         assert note == "Fact check failed: Claude declined to answer (refusal category: cyber)"
+
+    def test_claude_code_error_records_reason_in_note(self, db, updates):
+        _setup_claimable_annotation(db)
+        checker = _make_checker(side_effect=ClaudeCodeError("Claude Code used all 8 turns without reaching an answer"))
+        worker = _make_worker(checker, db, updates)
+
+        worker._process(db.claim_fact_check())
+
+        updates.fact_check_failed.assert_called_once()
+        note = updates.fact_check_failed.call_args[0][2]
+        assert note == "Fact check failed: Claude Code used all 8 turns without reaching an answer"
 
     def test_exception_still_checks_complete(self, db, updates):
         _setup_claimable_annotation(db)
