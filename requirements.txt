@@ -1,4 +1,6 @@
 anthropic>=0.40,<1.0
+anyio>=4.0,<5.0
+claude-agent-sdk>=0.2.164,<0.3
 mlx-whisper>=0.4; sys_platform == 'darwin'
 faster-whisper>=1.0; sys_platform != 'darwin'
 flask>=3.0,<4.0
