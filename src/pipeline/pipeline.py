@@ -4,6 +4,8 @@ from config import Config
 from db.database import Database
 from factchecker.llm_fact_checker import LLMFactChecker
 from llm.claude_client import ClaudeClient
+from llm.claude_code_client import ClaudeCodeClient
+from llm.llm_client import LLMClient
 from llm.rate_limit_tracker import RateLimitTracker
 from pipeline.update_service import UpdateService
 from pipeline.workers.transcription_worker import TranscriptionWorker
@@ -89,11 +91,17 @@ class Pipeline:
         log.info("Pipeline stopped")
 
     @staticmethod
-    def _build_claude_client(config: Config, model_config_key: str, max_tokens: int,
+    def _uses_claude_subscription(config: Config) -> bool:
+        return config.get("llm.provider", "api") == "subscription"
+
+    @classmethod
+    def _build_claude_client(cls, config: Config, model_config_key: str, max_tokens: int,
                               tools: list | None = None,
                               prompt_caching: bool = True,
-                              rate_limit_tracker: RateLimitTracker | None = None) -> ClaudeClient:
+                              rate_limit_tracker: RateLimitTracker | None = None) -> LLMClient:
         model = config.get(model_config_key)
+        if cls._uses_claude_subscription(config):
+            return ClaudeCodeClient(config, model, rate_limit_tracker=rate_limit_tracker)
         return ClaudeClient(config, model, max_tokens, tools=tools,
                             prompt_caching=prompt_caching, rate_limit_tracker=rate_limit_tracker)
 
@@ -108,6 +116,15 @@ class Pipeline:
     @classmethod
     def _build_fact_checker(cls, config: Config, prompt_builder: PromptBuilder,
                              rate_tracker: RateLimitTracker | None = None) -> LLMFactChecker:
+        if cls._uses_claude_subscription(config):
+            model = (config.get("llm.claude_code.fact_check_model")
+                     or config.get("llm.anthropic.fact_check_model"))
+            client = ClaudeCodeClient(config, model, tools=["WebSearch"],
+                                      max_turns=config.get("llm.claude_code.fact_check_max_turns", 8),
+                                      system_prompt_suffix=prompt_builder.fact_checker_claude_code_guidance(),
+                                      rate_limit_tracker=rate_tracker)
+            return LLMFactChecker(config, prompt_builder, client)
+
         web_search_tool = config.get("llm.anthropic.web_search_tool")
         max_searches = config.get("llm.anthropic.web_search_max_uses", 3)
         tools = [

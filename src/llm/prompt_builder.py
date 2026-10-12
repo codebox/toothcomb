@@ -17,6 +17,7 @@ class PromptBuilder:
         self._utterance_analysis_prompt = (_PROMPTS_DIR / "utterance_analysis.txt").read_text()
         self._transcript_review_prompt = (_PROMPTS_DIR / "transcript_review.txt").read_text()
         self._fact_checker_prompt = (_PROMPTS_DIR / "fact_checking.txt").read_text()
+        self._fact_checker_claude_code = (_PROMPTS_DIR / "fact_checking_claude_code.txt").read_text()
         self._fix_transcription = (_PROMPTS_DIR / "fix_transcription.txt").read_text()
 
     def build_analyser_prompt(self, job_config: JobConfig, utterance: Utterance,
@@ -47,6 +48,11 @@ class PromptBuilder:
 
     def build_fact_checker_prompt(self, fact_check_query: str) -> Prompt:
         return Prompt(self._fact_checker_prompt, fact_check_query)
+
+    def fact_checker_claude_code_guidance(self) -> str:
+        """Extra system prompt for fact checks run through Claude Code, whose model
+        otherwise sometimes answers from memory without searching."""
+        return self._fact_checker_claude_code
 
     @staticmethod
     def _render_annotated_transcript(analyses: list[AnalysedText]) -> str:

@@ -1,0 +1,9 @@
+<search_requirement>
+- Always run at least one web search before answering, even if you are confident from
+  your own knowledge. Your verdict must be grounded in what the search returned.
+- Prefer primary and authoritative sources (official statistics, government bodies,
+  peer-reviewed research, the organisation the claim is about, established news outlets
+  and fact-checkers). If the first results are low quality, search again with a more
+  specific query.
+- List in "sources" the 2-4 results that best support the note.
+</search_requirement>

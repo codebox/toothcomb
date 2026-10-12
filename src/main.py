@@ -17,11 +17,19 @@ log = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
-    api_key = config.get("llm.anthropic.api_key")
-    if not api_key:
-        log.error("No Anthropic API key configured. "
-                  "Set the LLM__ANTHROPIC__API_KEY environment variable, e.g.:\n"
-                  "  docker run -e LLM__ANTHROPIC__API_KEY=sk-ant-... toothcomb")
+    provider = config.get("llm.provider", "api")
+    if provider == "subscription":
+        log.info("Using Claude plan credits via Claude Code (llm.provider=subscription)")
+    elif provider == "api":
+        api_key = config.get("llm.anthropic.api_key")
+        if not api_key:
+            log.error("No Anthropic API key configured. "
+                      "Set the LLM__ANTHROPIC__API_KEY environment variable, e.g.:\n"
+                      "  docker run -e LLM__ANTHROPIC__API_KEY=sk-ant-... toothcomb\n"
+                      "Or set LLM__PROVIDER=subscription to use a Claude Pro/Max plan instead.")
+            raise SystemExit(1)
+    else:
+        log.error("Unknown llm.provider %r - expected 'api' or 'subscription'", provider)
         raise SystemExit(1)
 
     database = SQLiteDatabase(config.get("paths.db"))
