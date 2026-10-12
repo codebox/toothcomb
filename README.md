@@ -41,6 +41,31 @@ You can run Toothcomb natively on macOS or Linux, and via Docker on many platfor
 LLM__ANTHROPIC__API_KEY=your-key-goes-here
 ```
 
+<details>
+<summary>Using a Claude Pro or Max plan instead of an API key</summary>
+
+If you have a Claude Pro or Max plan you can run your own copy of Toothcomb against your plan's usage allowance instead of paying for API tokens. In this mode Toothcomb sends its requests through [Claude Code](https://code.claude.com/docs), which is bundled with the `claude-agent-sdk` Python package, so you don't need to install anything extra.
+
+1. On any machine with a web browser and [Claude Code](https://code.claude.com/docs) installed, run `claude setup-token` and log in with your Claude account. It prints a long-lived token.
+2. Put these lines in your `.env` file instead of the API key:
+
+   ```
+   LLM__PROVIDER=subscription
+   CLAUDE_CODE_OAUTH_TOKEN=your-token-goes-here
+   ```
+
+   If you run Toothcomb natively on a machine where you're already logged in to Claude Code, you can leave out the token.
+
+Don't also set `ANTHROPIC_API_KEY` in the environment: Toothcomb blanks it for its own Claude Code calls, but it's easy to end up paying for API usage by mistake.
+
+Things to know:
+
+- Fact checks use Claude Opus by default (`llm.claude_code.fact_check_model` in `resources/config.yaml`). In testing it wrote noticeably better fact-check notes than Sonnet, but it uses more of your plan's allowance. Set it to `claude-sonnet-5-5` to make your allowance go further.
+- Each request starts a short-lived Claude Code process, so calls are a second or two slower than with an API key, and a long transcript can use up a plan's usage limit. When that happens Toothcomb pauses and retries, as it does for API rate limits.
+- Anthropic's [terms](https://code.claude.com/docs/en/legal-and-compliance) say plan usage limits assume ordinary individual use, and don't allow requests to be routed through someone's plan credentials on other people's behalf. Only use this mode for a copy of Toothcomb that you run yourself, with your own plan.
+
+</details>
+
 The code requires at least Python 3.12 and Node.js v22. If you run the application using Docker these will be installed automatically within the container, but if you run it natively on your machine you'll need to install them yourself.
 
 The first time you run it, Toothcomb will probably need to download a [Whisper speech-to-text model](https://github.com/openai/whisper/blob/main/model-card.md) which is several gigabytes in size. The app will not be ready to use until the download completes. Subsequent runs use the cached model and start up much faster. Models are cached in `~/.cache/huggingface/hub/` and are shared across projects, so you only download each model once per machine.
