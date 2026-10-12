@@ -1,7 +1,7 @@
 import logging
 
 from config import Config
-from llm.claude_client import ClaudeClient
+from llm.llm_client import LLMClient
 from llm.json_utils import parse_llm_json
 from llm.retrying_llm_caller import RetryingLLMCaller
 from domain.fact_check_result import FactCheckResult, Verdict
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class LLMFactChecker(FactChecker, RetryingLLMCaller):
     def __init__(self, config: Config, prompt_builder: PromptBuilder,
-                 claude_client: ClaudeClient):
+                 claude_client: LLMClient):
         FactChecker.__init__(self, config)
         RetryingLLMCaller.__init__(self, max_retries=config.get("pipeline.fact_check_parse_retries", 2))
         self._prompt_builder = prompt_builder

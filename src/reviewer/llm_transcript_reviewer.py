@@ -6,7 +6,7 @@ from domain.job_config import JobConfig
 from domain.llm_response_error import LLMResponseError
 from domain.transcript_review import TranscriptReview, ReviewFinding
 from domain.types import JobId
-from llm.claude_client import ClaudeClient
+from llm.llm_client import LLMClient
 from llm.json_utils import parse_llm_json
 from llm.prompt_builder import PromptBuilder
 from llm.retrying_llm_caller import RetryingLLMCaller
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 class LLMTranscriptReviewer(TranscriptReviewer, RetryingLLMCaller):
     def __init__(self, config: Config, prompt_builder: PromptBuilder,
-                 claude_client: ClaudeClient):
+                 claude_client: LLMClient):
         TranscriptReviewer.__init__(self, config)
         RetryingLLMCaller.__init__(self, max_retries=config.get("pipeline.review_parse_retries", 2))
         self._prompt_builder = prompt_builder

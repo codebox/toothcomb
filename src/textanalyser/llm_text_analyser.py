@@ -1,5 +1,5 @@
 from config import Config
-from llm.claude_client import ClaudeClient
+from llm.llm_client import LLMClient
 from llm.json_utils import parse_llm_json
 from llm.retrying_llm_caller import RetryingLLMCaller
 from domain.analysed_text import AnalysedText, AnalysedPart, Annotation, AnnotationType
@@ -15,7 +15,7 @@ from textanalyser.text_analyser import TextAnalyser
 
 class LLMTextAnalyser(TextAnalyser, RetryingLLMCaller):
     def __init__(self, config: Config, prompt_builder: PromptBuilder,
-                 claude_client: ClaudeClient):
+                 claude_client: LLMClient):
         TextAnalyser.__init__(self, config)
         RetryingLLMCaller.__init__(self, max_retries=config.get("pipeline.analysis_parse_retries", 2))
         self.prompt_builder = prompt_builder
