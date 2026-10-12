@@ -35,11 +35,13 @@ You can [try out the Toothcomb demo](https://toothcomb.codebox.net/) for yoursel
 
 ### Running Toothcomb
 
-You can run Toothcomb natively on macOS or Linux, and via Docker on many platforms. The transcription feature works best with access to a GPU. You will also need an [Anthropic API key](https://platform.claude.com/docs/en/home) which must be saved in a file called `.env` in the root of the project, like this:
+You can run Toothcomb natively on macOS or Linux, and via Docker on many platforms. The transcription feature works best with access to a GPU. You will also need an [Anthropic API key](https://platform.claude.com/docs/en/home), which must be saved in a file called `.env` in the root of the project, like this:
 
 ```
 LLM__ANTHROPIC__API_KEY=your-key-goes-here
 ```
+
+If you have a Claude Pro or Max plan you can use that instead of an API key:
 
 <details>
 <summary>Using a Claude Pro or Max plan instead of an API key</summary>
@@ -123,7 +125,7 @@ Probably the best way to run Toothcomb on Windows is to install [Windows Subsyst
 
 #### Performance
 
-On a modern device with a GPU the transcription and most of the LLM analysis will run more or less in real time. By far the slowest part of the process is performing the fact checks that require web searches. For long speeches containing many claims, this can result in a lengthy backlog of pending verification requests. You can significantly speed this up by increasing the `fact_check_workers` value [in the configuration file](https://github.com/codebox/toothcomb/blob/main/resources/config.yaml#L105), allowing multiple fact checks to run concurrently. Depending on what [Usage Tier](https://platform.claude.com/docs/en/api/rate-limits#spend-limits) is assigned to your Anthropic account, this may result in your queries being rate limited.
+On a modern device with a GPU the transcription and most of the LLM analysis will run more or less in real time. By far the slowest part of the process is performing the fact checks that require web searches. For long speeches containing many claims, this can result in a lengthy backlog of pending verification requests. You can significantly speed this up by increasing the `fact_check_workers` value [in the configuration file](https://github.com/codebox/toothcomb/blob/main/resources/config.yaml#L121), allowing multiple fact checks to run concurrently. Depending on what [Usage Tier](https://platform.claude.com/docs/en/api/rate-limits#spend-limits) is assigned to your Anthropic account, this may result in your queries being rate limited. If you are using a Claude Pro or Max plan, it will use up your plan's usage allowance more quickly; when the allowance runs out Toothcomb pauses and retries.
 
 ### AI Disclosure
 
