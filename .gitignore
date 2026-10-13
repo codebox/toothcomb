@@ -11,3 +11,4 @@ web/js/bundle.js.map
 notes.txt
 .pytest_cache/
 .coverage
+docs/

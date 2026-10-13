@@ -9,7 +9,7 @@ from config import Config
 
 log = logging.getLogger(__name__)
 
-# PCM output format matching what the Whisper transcriber expects.
+# PCM output format matching what the transcribers expect.
 # Both Mp3AudioSource and StreamingAudioSource must produce audio in this
 # format. Changing these without updating the transcriber will break recognition.
 PCM_SAMPLE_RATE = 16000

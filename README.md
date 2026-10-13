@@ -70,9 +70,18 @@ Things to know:
 
 The code requires at least Python 3.12 and Node.js v22. If you run the application using Docker these will be installed automatically within the container, but if you run it natively on your machine you'll need to install them yourself.
 
-The first time you run it, Toothcomb will probably need to download a [Whisper speech-to-text model](https://github.com/openai/whisper/blob/main/model-card.md) which is several gigabytes in size. The app will not be ready to use until the download completes. Subsequent runs use the cached model and start up much faster. Models are cached in `~/.cache/huggingface/hub/` and are shared across projects, so you only download each model once per machine.
+The first time you run it, Toothcomb will probably need to download NVIDIA's [Parakeet speech-to-text model](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3), which is a few gigabytes in size. The app will not be ready to use until the download completes. Subsequent runs use the cached model and start up much faster. Models are cached in `~/.cache/huggingface/hub/` and are shared across projects, so you only download each model once per machine.
 
 Once Toothcomb is up and running you can access the web interface at [http://localhost:5000](http://localhost:5000).
+
+<details>
+<summary>Choosing a speech-to-text model</summary>
+
+Toothcomb transcribes audio with [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) by default, run through the Hugging Face [Transformers](https://github.com/huggingface/transformers) library. It is several times faster than OpenAI's Whisper large-v3 and at least as accurate, and it uses an NVIDIA GPU or an Apple Silicon GPU automatically when one is available. It handles 25 European languages; for English-only speeches you can set `parakeet.model` to `nvidia/parakeet-tdt-0.6b-v2`, which is slightly more accurate on English.
+
+To use Whisper instead (for example, for a language Parakeet doesn't support), set `transcription.engine` to `whisper` in `resources/config.yaml`, or add `TRANSCRIPTION__ENGINE=whisper` to your `.env` file. The `whisper` section of the config file then chooses the Whisper model.
+
+</details>
 
 <details>
 <summary>macOS (Apple Silicon)</summary>
@@ -96,7 +105,7 @@ docker compose --profile cpu up --build
 <details>
 <summary>Linux</summary>
 
-If you have an NVIDIA GPU, and have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed, then you can run the following command from the root of the project to start Toothcomb in GPU mode:
+If you have an NVIDIA GPU, and have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed, then you can run the following command from the root of the project to start Toothcomb in GPU mode (this needs NVIDIA driver 580 or newer):
 
 ```
 docker compose --profile gpu up --build
@@ -108,7 +117,7 @@ To run in CPU-only mode use this command instead:
 docker compose --profile cpu up --build
 ```
 
-To run Toothcomb outside of Docker use the following command from the root of the project. This will create a Python virtual environment, pull in all the dependencies, compile the TypeScript frontend and start the server. This will install the [Faster Whisper library](https://github.com/SYSTRAN/faster-whisper) which will automatically use your GPU if it's available.
+To run Toothcomb outside of Docker use the following command from the root of the project. This will create a Python virtual environment, pull in all the dependencies, compile the TypeScript frontend and start the server. Transcription will automatically use your GPU if it's available.
 
 ```
 make run

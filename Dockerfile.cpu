@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.docker.txt /tmp/requirements.txt
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+# CPU-only torch build: the default PyPI wheel bundles several GB of CUDA libraries
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Stage 3: Runtime
@@ -34,6 +36,8 @@ COPY --from=deps /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONPATH=src
 ENV WHISPER__BACKEND=faster-whisper
+# librosa (used by Parakeet) compiles with numba, which needs a writable cache directory
+ENV NUMBA_CACHE_DIR=/tmp/numba-cache
 
 COPY web/index.html web/index.html
 COPY web/favicon.svg web/favicon.svg

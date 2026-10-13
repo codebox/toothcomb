@@ -10,7 +10,7 @@
 #
 # Examples:
 #   llm.anthropic.api_key  →  LLM__ANTHROPIC__API_KEY=sk-ant-...
-#   whisper.backend        →  WHISPER__BACKEND=faster-whisper
+#   transcription.engine   →  TRANSCRIPTION__ENGINE=whisper
 #   webserver.port         →  WEBSERVER__PORT=8080
 #
 # This is the recommended way to provide secrets (API keys) rather
@@ -50,8 +50,20 @@ text:
   # text producing one giant chunk. Target chunk size is pipeline.analysis_buffer_words.
   chunk_max_words: 90
 
+transcription:
+  # Speech-to-text engine: "parakeet" (NVIDIA Parakeet, the default) or "whisper" (OpenAI Whisper)
+  engine: parakeet
+
+parakeet:
+  # Hugging Face model id. parakeet-tdt-0.6b-v3 handles 25 European languages;
+  # nvidia/parakeet-tdt-0.6b-v2 is English only and slightly more accurate on English
+  model: nvidia/parakeet-tdt-0.6b-v3
+  # Device for inference: "auto" (NVIDIA GPU, then Apple GPU, then CPU), "cuda", "mps" or "cpu"
+  device: auto
+
+# Only used when transcription.engine is "whisper"
 whisper:
-  # Speech-to-text backend: "mlx" (macOS Apple Silicon) or "faster-whisper" (Linux/Docker)
+  # Whisper backend: "mlx" (macOS Apple Silicon) or "faster-whisper" (Linux/Docker)
   backend: mlx
   # Whisper model size: tiny, base, small, medium, large-v2, large-v3
   # Larger models are more accurate but slower and use more memory

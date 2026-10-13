@@ -150,10 +150,16 @@ class Pipeline:
     @staticmethod
     def _build_transcriber(config: Config) -> Transcriber | None:
         if config.get("demo", False):
-            log.info("Demo mode: skipping whisper model load")
+            log.info("Demo mode: skipping speech-to-text model load")
             return None
-        backend = config.get("whisper.backend") or "mlx"
+        engine = config.get("transcription.engine") or "parakeet"
+        backend = (config.get("whisper.backend") or "mlx") if engine == "whisper" else engine
         try:
+            if engine == "parakeet":
+                from transcriber.parakeet_transcriber import ParakeetTranscriber
+                return ParakeetTranscriber(config)
+            if engine != "whisper":
+                raise ValueError(f"Unknown transcription.engine: {engine!r} (expected 'parakeet' or 'whisper')")
             if backend == "faster-whisper":
                 from transcriber.faster_whisper_transcriber import FasterWhisperTranscriber
                 return FasterWhisperTranscriber(config)
@@ -161,5 +167,6 @@ class Pipeline:
                 from transcriber.local_whisper_transcriber import LocalWhisperTranscriber
                 return LocalWhisperTranscriber(config)
         except Exception:
-            log.warning("Could not initialise transcriber (backend=%s) — audio sources will not work", backend)
+            log.warning("Could not initialise transcriber (backend=%s) — audio sources will not work", backend,
+                        exc_info=True)
             return None
