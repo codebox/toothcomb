@@ -22,7 +22,9 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # Stage 3: Runtime
 FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# The CUDA base is Ubuntu 24.04.1 and ships old packages (e.g. libbrotli1
+# 1.1.0-2build2, CVE-2026-111497, on CISA's KEV list): upgrade them at build time.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     python3.12 \
     python3.12-venv \
     ffmpeg \
